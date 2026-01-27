@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Bike Matrix • RGB Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;500;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255, 0, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+        
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 10% 20%, rgba(255, 0, 255, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 60%, rgba(0, 255, 255, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 50% 80%, rgba(255, 0, 128, 0.15) 0%, transparent 40%);
+            animation: orbFloat 25s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-30px, 30px) scale(0.9); }
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        header {
+            text-align: center;
+            padding: 80px 20px 60px;
+            position: relative;
+            perspective: 1000px;
+        }
+        
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 5em;
+            font-weight: 900;
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff0080, #00ffff, #ff00ff, #ff00ff);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: superRGB 4s ease-in-out infinite;
+            text-shadow: 
+                0 0 40px rgba(255, 0, 255, 0.8),
+                0 0 80px rgba(0, 255, 255, 0.6),
+                0 0 120px rgba(255, 0, 255, 0.4);
+            letter-spacing: 8px;
+            transform: rotateX(10deg);
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        @keyframes superRGB {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .subtitle {
+            font-size: 1.4em;
+            font-weight: 300;
+            letter-spacing: 6px;
+            color: #00ffff;
+            text-shadow: 
+                0 0 20px rgba(0, 255, 255, 0.8),
+                0 0 40px rgba(0, 255, 255, 0.4);
+            text-transform: uppercase;
+            animation: flicker 3s ease-in-out infinite;
+        }
+        
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+            25%, 75% { opacity: 0.95; }
+        }
+        
+        .divider {
+            height: 3px;
+            margin: 50px auto;
+            max-width: 80%;
+            background: linear-gradient(90deg, transparent, #ff00ff, #00ffff, #ff00ff, transparent);
+            box-shadow: 
+                0 0 20px rgba(255, 0, 255, 0.8),
+                0 0 40px rgba(0, 255, 255, 0.6);
+            animation: dividerPulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes dividerPulse {
+            0%, 100% { opacity: 0.6; transform: scaleX(1); }
+            50% { opacity: 1; transform: scaleX(1.02); }
+        }
+        
+        .rankings {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 60px;
+            padding: 0 20px;
+        }
+        
+        .ranking-card {
+            background: rgba(10, 10, 10, 0.8);
+            padding: 30px;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .ranking-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(60deg, #ff00ff, #00ffff, #ff0080, #00ffff, #ff00ff);
+            background-size: 300% 300%;
+            border-radius: 20px;
+            z-index: -1;
+            animation: borderFlow 5s ease infinite;
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+        
+        @keyframes borderFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .ranking-card:hover::before {
+            opacity: 1;
+        }
+        
+        .ranking-card:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 
+                0 20px 60px rgba(255, 0, 255, 0.4),
+                0 0 80px rgba(0, 255, 255, 0.3);
+        }
+        
+        .ranking-title {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.2em;
+            background: linear-gradient(90deg, #ff00ff, #00ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+        
+        .ranking-value {
+            font-size: 1.4em;
+            color: #fff;
+            font-weight: 700;
+        }
+        
+        .controls {
+            background: rgba(15, 15, 15, 0.9);
+            padding: 30px;
+            border-radius: 25px;
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 50px;
+            border: 2px solid rgba(255, 0, 255, 0.2);
+            backdrop-filter: blur(20px);
+        }
+        
+        .controls label {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 0.95em;
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        .controls select, .controls input {
+            padding: 14px 20px;
+            background: rgba(20, 20, 20, 0.9);
+            border: 2px solid rgba(255, 0, 255, 0.4);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            font-family: 'Exo 2', sans-serif;
+            font-weight: 500;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        .controls select:focus, .controls input:focus {
+            border-color: #ff00ff;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.6);
+            transform: translateY(-2px);
+        }
+        
+        .view-toggle {
+            display: flex;
+            gap: 15px;
+            margin-left: auto;
+        }
+        
+        .view-btn {
+            padding: 14px 30px;
+            background: rgba(20, 20, 20, 0.9);
+            border: 2px solid rgba(255, 0, 255, 0.5);
+            color: #00ffff;
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 0.95em;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: all 0.3s;
+        }
+        
+        .view-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 0, 255, 0.5);
+        }
+        
+        .view-btn.active {
+            background: linear-gradient(135deg, #ff00ff, #ff0080);
+            border-color: #ff00ff;
+            color: #fff;
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.8);
+        }
+        
+        .bike-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 35px;
+            padding: 0 20px;
+        }
+        
+        .bike-card {
+            background: rgba(10, 10, 10, 0.95);
+            border-radius: 25px;
+            padding: 35px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+        }
+        
+        .bike-card::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff0080, #00ffff, #ff00ff);
+            background-size: 400% 400%;
+            border-radius: 25px;
+            z-index: -1;
+            animation: borderFlow 8s ease infinite;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .bike-card:hover::before {
+            opacity: 1;
+        }
+        
+        .bike-card:hover {
+            transform: translateY(-15px) scale(1.02);
+            box-shadow: 
+                0 30px 80px rgba(255, 0, 255, 0.5),
+                0 0 100px rgba(0, 255, 255, 0.3);
+        }
+        
+        .bike-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ff00ff, #00ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .value-badge {
+            background: linear-gradient(135deg, #ff00ff, #ff0080);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.5em;
+            font-weight: 900;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.8);
+            animation: badgePulse 2s ease-in-out infinite;
+            letter-spacing: 1px;
+        }
+        
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .spec-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 0, 255, 0.15);
+            transition: all 0.3s;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .spec-row:hover {
+            padding-left: 15px;
+            background: rgba(255, 0, 255, 0.05);
+        }
+        
+        .spec-label {
+            font-weight: 700;
+            color: #00ffff;
+            text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+            font-size: 1.05em;
+            letter-spacing: 1px;
+        }
+        
+        .spec-value {
+            color: #fff;
+            font-weight: 600;
+            text-align: right;
+            font-size: 1.05em;
+        }
+        
+        .features {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 2px solid rgba(255, 0, 255, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .features-title {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.2em;
+            background: linear-gradient(90deg, #ff00ff, #00ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+        
+        .features-text {
+            color: #ccc;
+            line-height: 1.7;
+            font-size: 0.98em;
+        }
+        
+        .table-view {
+            padding: 0 20px;
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: rgba(10, 10, 10, 0.95);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        th {
+            background: linear-gradient(135deg, #ff00ff, #ff0080, #00ffff);
+            color: #fff;
+            padding: 20px;
+            text-align: left;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: sticky;
+            top: 0;
+        }
+        
+        td {
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(255, 0, 255, 0.15);
+            transition: all 0.3s;
+        }
+        
+        tbody tr:hover {
+            background: rgba(255, 0, 255, 0.1);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 20px;
+            background: linear-gradient(transparent, rgba(0, 255, 255, 0.1), transparent);
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100vh); }
+        }
+        
+        .fade-in {
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Request Button */
+        .request-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 18px 35px;
+            background: rgba(20, 20, 20, 0.95);
+            border: 3px solid transparent;
+            color: #fff;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 1.1em;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: all 0.4s;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .request-button::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff0080, #00ffff, #ff00ff);
+            background-size: 400% 400%;
+            border-radius: 50px;
+            z-index: -1;
+            animation: borderFlow 4s ease infinite;
+        }
+        
+        .request-button:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 20px 60px rgba(255, 0, 255, 0.6);
+        }
+        
+        /* Detail Page */
+        .detail-page {
+            display: none;
+        }
+        
+        .detail-page.active {
+            display: block;
+        }
+        
+        .back-button {
+            padding: 15px 30px;
+            background: rgba(20, 20, 20, 0.9);
+            border: 2px solid rgba(255, 0, 255, 0.5);
+            color: #00ffff;
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            margin-bottom: 30px;
+            display: inline-block;
+        }
+        
+        .back-button:hover {
+            background: linear-gradient(135deg, #ff00ff, #ff0080);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+        
+        .detail-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(10, 10, 10, 0.95);
+            border-radius: 25px;
+            padding: 40px;
+            position: relative;
+        }
+        
+        .detail-container::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff0080, #00ffff, #ff00ff);
+            background-size: 400% 400%;
+            border-radius: 25px;
+            z-index: -1;
+            animation: borderFlow 8s ease infinite;
+        }
+        
+        .detail-header {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ff00ff, #00ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        
+        .detail-image-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto 40px;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .detail-image-container::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff0080, #00ffff, #ff00ff);
+            background-size: 400% 400%;
+            border-radius: 20px;
+            z-index: -1;
+            animation: borderFlow 6s ease infinite;
+        }
+        
+        .detail-image {
+            width: 100%;
+            display: block;
+            border-radius: 20px;
+        }
+        
+        .detail-image.placeholder {
+            aspect-ratio: 16/9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(30, 30, 30, 0.9);
+            color: #00ffff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5em;
+            padding: 40px;
+        }
+        
+        .detail-description {
+            background: rgba(20, 20, 20, 0.8);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 0, 255, 0.3);
+            margin-bottom: 30px;
+        }
+        
+        .detail-description h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: #00ffff;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .detail-description p {
+            color: #ccc;
+            line-height: 1.8;
+            font-size: 1.1em;
+        }
+        
+        .detail-specs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .detail-spec-card {
+            background: rgba(20, 20, 20, 0.8);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 0, 255, 0.3);
+        }
+        
+        .detail-spec-card h4 {
+            color: #ff00ff;
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 10px;
+        }
+        
+        .detail-spec-card p {
+            color: #fff;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 3em;
+            }
+            
+            .bike-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .view-toggle {
+                margin-left: 0;
+                width: 100%;
+            }
+            
+            .request-button {
+                bottom: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scanline"></div>
+    
+    <!-- Request Button -->
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLSds2wKbfHJrx0EUD68JGKpfR138k1ESzvd2klZVI3h1CEVAlg/viewform" 
+       target="_blank" 
+       class="request-button">
+        🚀 REQUEST A BIKE
+    </a>
+    
+    <!-- Main Page -->
+    <div id="mainPage" class="container">
+        <header>
+            <h1>E-BIKE NEXUS</h1>
+            <p class="subtitle">⚡ ULTIMATE COMPARISON MATRIX ⚡</p>
+        </header>
+        
+        <div class="divider"></div>
+        
+        <div class="rankings fade-in">
+            <div class="ranking-card">
+                <div class="ranking-title">🏆 ULTIMATE VALUE</div>
+                <div class="ranking-value">Freego F3 Pro Max</div>
+            </div>
+            <div class="ranking-card">
+                <div class="ranking-title">⚡ POWER KING</div>
+                <div class="ranking-value">Freego X2 Pro</div>
+            </div>
+            <div class="ranking-card">
+                <div class="ranking-title">💰 BUDGET BEAST</div>
+                <div class="ranking-value">Macfox X2</div>
+            </div>
+            <div class="ranking-card">
+                <div class="ranking-title">🪶 FEATHERWEIGHT</div>
+                <div class="ranking-value">P-51 Ace • 53 lbs</div>
+            </div>
+            <div class="ranking-card">
+                <div class="ranking-title">🚀 SPEED DEMON</div>
+                <div class="ranking-value">Freego X2 Pro • 55 mph</div>
+            </div>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="controls fade-in">
+            <label>SORT BY:</label>
+            <select id="sortSelect">
+                <option value="name">Name</option>
+                <option value="price">Price (Low → High)</option>
+                <option value="priceDesc">Price (High → Low)</option>
+                <option value="value">Value Rating</option>
+                <option value="speed">Max Speed</option>
+                <option value="weight">Weight</option>
+                <option value="range">Range</option>
+            </select>
+            
+            <label>MAX PRICE:</label>
+            <input type="number" id="priceFilter" placeholder="e.g., 3000" min="0" step="100">
+            
+            <label>MIN VALUE:</label>
+            <select id="valueFilter">
+                <option value="0">All</option>
+                <option value="5">5+</option>
+                <option value="6">6+</option>
+                <option value="7">7+</option>
+                <option value="8">8+</option>
+                <option value="9">9+</option>
+            </select>
+            
+            <div class="view-toggle">
+                <button class="view-btn active" onclick="showCards()">CARD VIEW</button>
+                <button class="view-btn" onclick="showTable()">TABLE VIEW</button>
+            </div>
+        </div>
+        
+        <div id="cardView" class="bike-grid"></div>
+        
+        <div id="tableView" class="table-view hidden">
+            <table>
+                <thead>
+                    <tr>
+                        <th>MODEL</th>
+                        <th>PRICE</th>
+                        <th>RANGE</th>
+                        <th>MAX SPEED</th>
+                        <th>MODDED</th>
+                        <th>WEIGHT</th>
+                        <th>POWER</th>
+                        <th>VALUE</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Detail Page -->
+    <div id="detailPage" class="detail-page container">
+        <button class="back-button" onclick="showMainPage()">← BACK TO LIST</button>
+        
+        <div class="detail-container">
+            <h2 class="detail-header" id="detailBikeName">BIKE NAME</h2>
+            
+            <div class="detail-image-container">
+                <!-- 
+                    ⚡ HOW TO ADD IMAGES ⚡
+                    RECOMMENDED: 1600x900 pixels (16:9 ratio)
+                    Edit the bikeDetails object in JavaScript below
+                -->
+                <div class="detail-image placeholder" id="detailImagePlaceholder">
+                    📸 IMAGE COMING SOON<br>
+                    <small style="font-size: 0.6em; margin-top: 10px; display: block;">
+                        Add 1600x900px image
+                    </small>
+                </div>
+            </div>
+            
+            <div class="detail-description">
+                <h3>📝 DESCRIPTION</h3>
+                <p id="detailDescription">Add your custom description in the bikeDetails object below!</p>
+            </div>
+            
+            <div class="detail-specs-grid" id="detailSpecs"></div>
+        </div>
+    </div>
+    
+    <script>
+        const bikes = [
+            {
+                name: "Macfox X2",
+                price: 1699,
+                range: "45-90 miles",
+                maxSpeed: 28,
+                moddedSpeed: 28,
+                weight: 65,
+                power: "750W/1000W peak",
+                material: "6061 Aluminum",
+                seating: 2,
+                motors: 1,
+                value: 8,
+                features: "Dual suspension, 7-speed gears, LCD display, 20\"x4\" fat tires"
+            },
+            {
+                name: "P-51 Bullet",
+                price: 3850,
+                range: "40+ miles",
+                maxSpeed: 32,
+                moddedSpeed: 32,
+                weight: 63,
+                power: "750W/1800W peak",
+                material: "Aluminum",
+                seating: 2,
+                motors: 1,
+                value: 7,
+                features: "200mm front/140mm rear suspension, 12V system, 1900 lumen headlight"
+            },
+            {
+                name: "P-51 Ace",
+                price: 4195,
+                range: "40+ miles",
+                maxSpeed: 32,
+                moddedSpeed: 32,
+                weight: 53,
+                power: "750W/1800W peak",
+                material: "Aluminum (forged)",
+                seating: 2,
+                motors: 1,
+                value: 6.5,
+                features: "10 lbs lighter than Bullet, integrated screen, forged head tube, shorter wheelbase"
+            },
+            {
+                name: "Freego X2 Pro",
+                price: 2649,
+                range: "37-56 miles",
+                maxSpeed: 50,
+                moddedSpeed: 55,
+                weight: 121,
+                power: "3000W/6000W peak",
+                material: "Steel",
+                seating: 2,
+                motors: 1,
+                value: 9,
+                features: "Dual-mode operation, Apple Find My tracker, 4-piston hydraulic brakes, 19\"x2.75\" tires"
+            },
+            {
+                name: "Freego X3 (Nova 3)",
+                price: 2649,
+                range: "20-50 miles",
+                maxSpeed: 40,
+                moddedSpeed: 40,
+                weight: 117,
+                power: "3000W peak (mid-drive)",
+                material: "Aluminum",
+                seating: 1,
+                motors: 1,
+                value: 8,
+                features: "Mid-drive motor, 1:9.6 reduction ratio, low seat height, 17\" tires"
+            },
+            {
+                name: "Freego F2 Pro Max",
+                price: 2149,
+                range: "31-50 miles",
+                maxSpeed: 40,
+                moddedSpeed: 40,
+                weight: 77,
+                power: "2000W peak",
+                material: "Steel pipe",
+                seating: 2,
+                motors: 1,
+                value: 8.5,
+                features: "Shimano 7-speed, integral wheels, 20\"x4\" fat tires, UL2849 certified"
+            },
+            {
+                name: "Freego F3 Pro",
+                price: 2549,
+                range: "44-68 miles",
+                maxSpeed: 34,
+                moddedSpeed: 35,
+                weight: 99,
+                power: "2000W peak (dual motor)",
+                material: "Steel pipe",
+                seating: 2,
+                motors: 2,
+                value: 9,
+                features: "Dual motor AWD, dual battery (40Ah), Shimano 7-speed, 20\"x4\" fat tires"
+            },
+            {
+                name: "Freego F3 Pro Max",
+                price: 2949,
+                range: "55-103 miles",
+                maxSpeed: 34,
+                moddedSpeed: 35,
+                weight: 99,
+                power: "2000W peak (dual motor)",
+                material: "Steel pipe",
+                seating: 2,
+                motors: 2,
+                value: 9.5,
+                features: "Dual motor AWD, massive dual battery (55Ah/2640Wh), 4-piston hydraulic brakes"
+            },
+            {
+                name: "Super 73 R Adventure SE",
+                price: 3795,
+                range: "40-75 miles",
+                maxSpeed: 28,
+                moddedSpeed: 28,
+                weight: 88,
+                power: "1200W/2000W peak",
+                material: "Aluminum",
+                seating: 2,
+                motors: 1,
+                value: 6,
+                features: "8-speed cassette, moto-inspired seat, app connectivity, premium brand"
+            },
+            {
+                name: "Ghostcat F3 Class 2",
+                price: 2199,
+                range: "20-40 miles",
+                maxSpeed: 20,
+                moddedSpeed: 20,
+                weight: 84,
+                power: "750W",
+                material: "Aluminum soft tail",
+                seating: 2,
+                motors: 1,
+                value: 7,
+                features: "UL2271 certified, adjustable suspension, 7-speed gears, street legal (locked)"
+            },
+            {
+                name: "Ford Bronco E-Bike",
+                price: 4500,
+                range: "60 miles",
+                maxSpeed: 28,
+                moddedSpeed: 28,
+                weight: 68,
+                power: "750W",
+                material: "6061 Aluminum",
+                seating: 2,
+                motors: 1,
+                value: 5,
+                features: "G.O.A.T. suspension (120mm/190mm), 2000 lumen headlight, Pirelli Scorpion tires, 2-year warranty"
+            },
+            {
+                name: "Revv1 HT",
+                price: 1895,
+                range: "30-60 miles",
+                maxSpeed: 20,
+                moddedSpeed: 35,
+                weight: 83,
+                power: "750W/1500W peak",
+                material: "Aluminum",
+                seating: 2,
+                motors: 1,
+                value: 8.5,
+                features: "52V 15Ah battery, hydraulic brakes, 100mm front suspension, moto-style lights, 20x4 fat tires"
+            },
+            {
+                name: "Revv1 DRT",
+                price: 2595,
+                range: "30-60 miles",
+                maxSpeed: 28,
+                moddedSpeed: 35,
+                weight: 91,
+                power: "1000W/2000W peak",
+                material: "Aluminum",
+                seating: 2,
+                motors: 1,
+                value: 8,
+                features: "52V 20Ah battery, off-road focused, 4-piston brakes, Inova tires, spoked wheels"
+            },
+            {
+                name: "Revv1 FS",
+                price: 2295,
+                range: "30-60 miles",
+                maxSpeed: 20,
+                moddedSpeed: 38,
+                weight: 93,
+                power: "750W/1500W peak",
+                material: "Aluminum",
+                seating: 2,
+                motors: 1,
+                value: 8.5,
+                features: "52V 20Ah battery, full suspension, adjustable, moto lights with turn signals"
+            },
+            {
+                name: "RideStar Q20 Pro",
+                price: 2049,
+                range: "75-180 miles",
+                maxSpeed: 34,
+                moddedSpeed: 37,
+                weight: 110,
+                power: "2000W (dual 1000W)",
+                material: "Aluminum",
+                seating: 2,
+                motors: 2,
+                value: 9,
+                features: "Dual motor AWD, dual 52V 20Ah batteries, 7-speed Shimano, hydraulic brakes, 20x4 tires"
+            },
+            {
+                name: "Ghostcat 4X (F4X)",
+                price: 2799,
+                range: "30-50 miles",
+                maxSpeed: 40,
+                moddedSpeed: 40,
+                weight: 86,
+                power: "2200W/3300W peak",
+                material: "Aluminum soft tail",
+                seating: 2,
+                motors: 1,
+                value: 9,
+                features: "60V 25Ah battery, KKE 120mm front fork, 160Nm+ torque, adjustable suspension"
+            },
+            {
+                name: "Ghostcat F3X.2",
+                price: 2599,
+                range: "52 miles",
+                maxSpeed: 35,
+                moddedSpeed: 35,
+                weight: 84,
+                power: "1500W/2340W peak",
+                material: "Aluminum soft tail",
+                seating: 2,
+                motors: 1,
+                value: 8.5,
+                features: "52V 25Ah battery, KKE 120mm fork, 140Nm+ torque, 7-speed, extended seat"
+            },
+            {
+                name: "Segway Xyber",
+                price: 3299,
+                range: "56-112 miles",
+                maxSpeed: 35,
+                moddedSpeed: 35,
+                weight: 138,
+                power: "1440W/3000W peak (single) / 6000W peak (dual)",
+                material: "Cast Aluminum",
+                seating: 1,
+                motors: 1,
+                value: 7.5,
+                features: "Dual battery option, 175Nm torque, 110mm/100mm suspension, Apple Find My, AirLock, 20x5 tires"
+            },
+            {
+                name: "Happy Run G300 Pro",
+                price: 2599,
+                range: "60-70 miles",
+                maxSpeed: 50,
+                moddedSpeed: 50,
+                weight: 132,
+                power: "3000W/6500W peak",
+                material: "Aluminum alloy forged",
+                seating: 1,
+                motors: 1,
+                value: 9,
+                features: "72V 30Ah battery, inverted front fork, HR suspension, hydraulic brakes, 5 speed modes"
+            }
+        ];
+        
+        // ⚡ BIKE IMAGES AND DESCRIPTIONS ⚡
+        // Edit this to add images and custom descriptions for each bike
+        const bikeDetails = {
+            "Macfox X2": {
+                image: "YOUR-IMAGE-URL-HERE.jpg",
+                description: "Add your custom description for the Macfox X2 here!"
+            },
+            "P-51 Bullet": {
+                image: "YOUR-IMAGE-URL-HERE.jpg",
+                description: "Add your custom description for the P-51 Bullet here!"
+            },
+            "P-51 Ace": {
+                image: "YOUR-IMAGE-URL-HERE.jpg",
+                description: "Add your custom description for the P-51 Ace here!"
+            },
+            "Freego X2 Pro": {
+                image: "YOUR-IMAGE-URL-HERE.jpg",
+                description: "Add your custom description for the Freego X2 Pro here!"
+            },
+            "Freego X3 (Nova 3)": {
+                image: "YOUR-IMAGE-URL-HERE.jpg",
+                description: "Add your custom description for the Freego X3 here!"
+            },
+            "Freego F2 Pro Max": {
+                image: "YOUR-IMAGE-URL-HERE.jpg",
+                description: "Add your custom description for the Freego F2 Pro Max here!"
+            },
+            "Freego F3 Pro": {
+                image: "YOUR-IMAGE-URL-HERE.jpg",
+                description: "Add your custom description for the Freego F3 Pro here!"
+            },
+            "Freego F3 Pro Max": {
+                image: "YOUR-IMAGE-URL-HERE.jpg",
+                description: "Add your custom description for the Freego F3 Pro Max here!"
+            },
+            "Super 73 R Adventure SE": {
+                image: "YOUR-IMAGE-URL-HERE.jpg",
+                description: "Add your custom description for the Super 73 R Adventure SE here!"
+            },
+            "Ghostcat F3 Class 2": {
+                image: "YOUR-IMAGE-URL-HERE.jpg",
+                description: "Add your custom description for the Ghostcat F3 Class 2 here!"
+            },
+            "Ford Bronco E-Bike": {
+                image: "YOUR-IMAGE-URL-HERE.jpg",
+                description: "Add your custom description for the Ford Bronco E-Bike here!"
+            },
+            "Revv1 HT": {
+                image: "YOUR-IMAGE-URL-HERE.jpg",
+                description: "Add your custom description for the Revv1 HT here!"
+            },
+            "Revv1 DRT": {
+                image: "YOUR-IMAGE-URL-HERE.jpg",
+                description: "Add your custom description for the Revv1 DRT here!"
+            },
+            "Revv1 FS": {
+                image: "YOUR-IMAGE-URL-HERE.jpg",
+                description: "Add your custom description for the Revv1 FS here!"
+            },
+            "RideStar Q20 Pro": {
+                image: "YOUR-IMAGE-URL-HERE.jpg",
+                description: "Add your custom description for the RideStar Q20 Pro here!"
+            },
+            "Ghostcat 4X (F4X)": {
+                image: "YOUR-IMAGE-URL-HERE.jpg",
+                description: "Add your custom description for the Ghostcat 4X here!"
+            },
+            "Ghostcat F3X.2": {
+                image: "YOUR-IMAGE-URL-HERE.jpg",
+                description: "Add your custom description for the Ghostcat F3X.2 here!"
+            },
+            "Segway Xyber": {
+                image: "YOUR-IMAGE-URL-HERE.jpg",
+                description: "Add your custom description for the Segway Xyber here!"
+            },
+            "Happy Run G300 Pro": {
+                image: "YOUR-IMAGE-URL-HERE.jpg",
+                description: "Add your custom description for the Happy Run G300 Pro here!"
+            }
+        };
+        
+        let filteredBikes = [...bikes];
+        let currentBike = null;
+        
+        function showBikeDetail(bikeName) {
+            currentBike = bikes.find(b => b.name === bikeName);
+            if (!currentBike) return;
+            
+            document.getElementById('mainPage').style.display = 'none';
+            document.getElementById('detailPage').classList.add('active');
+            
+            document.getElementById('detailBikeName').textContent = currentBike.name;
+            
+            const details = bikeDetails[bikeName];
+            const imagePlaceholder = document.getElementById('detailImagePlaceholder');
+            
+            if (details && details.image && details.image !== "YOUR-IMAGE-URL-HERE.jpg") {
+                imagePlaceholder.innerHTML = `<img src="${details.image}" class="detail-image" alt="${bikeName}" style="width: 100%; height: auto; display: block; border-radius: 20px;">`;
+            } else {
+                imagePlaceholder.innerHTML = `
+                    📸 IMAGE COMING SOON<br>
+                    <small style="font-size: 0.6em; margin-top: 10px; display: block;">
+                        Add 1600x900px image for ${bikeName}
+                    </small>
+                `;
+            }
+            
+            if (details && details.description && !details.description.includes("Add your custom description")) {
+                document.getElementById('detailDescription').textContent = details.description;
+            } else {
+                document.getElementById('detailDescription').textContent = 
+                    `Add your custom description here! Talk about what makes this bike special.`;
+            }
+            
+            const specsContainer = document.getElementById('detailSpecs');
+            specsContainer.innerHTML = `
+                <div class="detail-spec-card">
+                    <h4>💰 PRICE</h4>
+                    <p>${currentBike.price.toLocaleString()}</p>
+                </div>
+                <div class="detail-spec-card">
+                    <h4>🔋 RANGE</h4>
+                    <p>${currentBike.range}</p>
+                </div>
+                <div class="detail-spec-card">
+                    <h4>⚡ MAX SPEED</h4>
+                    <p>${currentBike.maxSpeed} mph</p>
+                </div>
+                <div class="detail-spec-card">
+                    <h4>🚀 MODDED SPEED</h4>
+                    <p>${currentBike.moddedSpeed} mph</p>
+                </div>
+                <div class="detail-spec-card">
+                    <h4>⚖️ WEIGHT</h4>
+                    <p>${currentBike.weight} lbs</p>
+                </div>
+                <div class="detail-spec-card">
+                    <h4>🔌 POWER</h4>
+                    <p>${currentBike.power}</p>
+                </div>
+                <div class="detail-spec-card">
+                    <h4>🏗️ MATERIAL</h4>
+                    <p>${currentBike.material}</p>
+                </div>
+                <div class="detail-spec-card">
+                    <h4>👥 SEATING</h4>
+                    <p>${currentBike.seating} riders</p>
+                </div>
+                <div class="detail-spec-card">
+                    <h4>⚙️ MOTORS</h4>
+                    <p>${currentBike.motors}</p>
+                </div>
+                <div class="detail-spec-card">
+                    <h4>⭐ VALUE RATING</h4>
+                    <p>${currentBike.value}/10</p>
+                </div>
+            `;
+            
+            window.scrollTo(0, 0);
+        }
+        
+        function showMainPage() {
+            document.getElementById('mainPage').style.display = 'block';
+            document.getElementById('detailPage').classList.remove('active');
+            window.scrollTo(0, 0);
+        }
+        
+        function renderCards() {
+            const grid = document.getElementById('cardView');
+            grid.innerHTML = '';
+            
+            filteredBikes.forEach((bike, index) => {
+                const card = document.createElement('div');
+                card.className = 'bike-card fade-in';
+                card.style.animationDelay = `${0.7 + index * 0.1}s`;
+                card.onclick = () => showBikeDetail(bike.name);
+                card.innerHTML = `
+                    <div class="bike-name">
+                        <span>${bike.name}</span>
+                        <span class="value-badge">${bike.value}/10</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">💰 PRICE</span>
+                        <span class="spec-value">${bike.price.toLocaleString()}</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">🔋 RANGE</span>
+                        <span class="spec-value">${bike.range}</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">⚡ MAX SPEED</span>
+                        <span class="spec-value">${bike.maxSpeed} mph</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">🚀 MODDED</span>
+                        <span class="spec-value">${bike.moddedSpeed} mph</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">⚖️ WEIGHT</span>
+                        <span class="spec-value">${bike.weight} lbs</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">🔌 POWER</span>
+                        <span class="spec-value">${bike.power}</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">🏗️ MATERIAL</span>
+                        <span class="spec-value">${bike.material}</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">👥 SEATING</span>
+                        <span class="spec-value">${bike.seating}</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">⚙️ MOTORS</span>
+                        <span class="spec-value">${bike.motors}</span>
+                    </div>
+                    <div class="features">
+                        <div class="features-title">✨ SPECIAL FEATURES</div>
+                        <div class="features-text">${bike.features}</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+        
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            filteredBikes.forEach(bike => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${bike.name}</strong></td>
+                    <td>${bike.price.toLocaleString()}</td>
+                    <td>${bike.range}</td>
+                    <td>${bike.maxSpeed} mph</td>
+                    <td>${bike.moddedSpeed} mph</td>
+                    <td>${bike.weight} lbs</td>
+                    <td>${bike.power}</td>
+                    <td><strong>${bike.value}/10</strong></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        function applyFilters() {
+            const priceFilter = document.getElementById('priceFilter').value;
+            const valueFilter = parseFloat(document.getElementById('valueFilter').value);
+            
+            filteredBikes = bikes.filter(bike => {
+                if (priceFilter && bike.price > parseInt(priceFilter)) return false;
+                if (valueFilter && bike.value < valueFilter) return false;
+                return true;
+            });
+            
+            applySorting();
+        }
+        
+        function applySorting() {
+            const sortBy = document.getElementById('sortSelect').value;
+            
+            switch(sortBy) {
+                case 'price':
+                    filteredBikes.sort((a, b) => a.price - b.price);
+                    break;
+                case 'priceDesc':
+                    filteredBikes.sort((a, b) => b.price - a.price);
+                    break;
+                case 'value':
+                    filteredBikes.sort((a, b) => b.value - a.value);
+                    break;
+                case 'speed':
+                    filteredBikes.sort((a, b) => b.moddedSpeed - a.moddedSpeed);
+                    break;
+                case 'weight':
+                    filteredBikes.sort((a, b) => a.weight - b.weight);
+                    break;
+                case 'range':
+                    filteredBikes.sort((a, b) => {
+                        const aRange = parseInt(a.range.match(/\d+/g).pop());
+                        const bRange = parseInt(b.range.match(/\d+/g).pop());
+                        return bRange - aRange;
+                    });
+                    break;
+                default:
+                    filteredBikes.sort((a, b) => a.name.localeCompare(b.name));
+            }
+            
+            renderCards();
+            renderTable();
+        }
+        
+        function showCards() {
+            document.getElementById('cardView').classList.remove('hidden');
+            document.getElementById('tableView').classList.add('hidden');
+            document.querySelectorAll('.view-btn')[0].classList.add('active');
+            document.querySelectorAll('.view-btn')[1].classList.remove('active');
+        }
+        
+        function showTable() {
+            document.getElementById('cardView').classList.add('hidden');
+            document.getElementById('tableView').classList.remove('hidden');
+            document.querySelectorAll('.view-btn')[0].classList.remove('active');
+            document.querySelectorAll('.view-btn')[1].classList.add('active');
+        }
+        
+        document.getElementById('sortSelect').addEventListener('change', applySorting);
+        document.getElementById('priceFilter').addEventListener('input', applyFilters);
+        document.getElementById('valueFilter').addEventListener('change', applyFilters);
+        
+        setTimeout(() => {
+            renderCards();
+            renderTable();
+        }, 100);
+    </script>
+</body>
+</html>
