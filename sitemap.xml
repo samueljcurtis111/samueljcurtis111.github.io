@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://samueljcurtis111.github.io/</loc>
+    <lastmod>2026-01-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>
+```
+
+### **3. Create a robots.txt File**
+
+This tells search engines how to crawl your site.
+
+**Create a new file in your GitHub repo called `robots.txt`:**
+```
+User-agent: *
+Allow: /
+
+Sitemap: https://samueljcurtis111.github.io/sitemap.xml
