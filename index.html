@@ -29,8 +29,8 @@
             width: 100%;
             height: 100%;
             background-image: 
-                linear-gradient(rgba(255, 0, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+                linear-gradient(rgba(255, 215, 0, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 215, 0, 0.03) 1px, transparent 1px);
             background-size: 50px 50px;
             animation: gridMove 20s linear infinite;
             pointer-events: none;
@@ -50,9 +50,9 @@
             width: 100%;
             height: 100%;
             background: 
-                radial-gradient(circle at 10% 20%, rgba(255, 0, 255, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 90% 60%, rgba(0, 255, 255, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 50% 80%, rgba(255, 0, 128, 0.15) 0%, transparent 40%);
+                radial-gradient(circle at 10% 20%, rgba(255, 215, 0, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 60%, rgba(255, 215, 0, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 50% 80%,  rgba(255, 140, 0, 0.15) 0%, transparent 40%);
             animation: orbFloat 25s ease-in-out infinite;
             pointer-events: none;
             z-index: 0;
@@ -83,16 +83,16 @@
             font-family: 'Orbitron', sans-serif;
             font-size: 5em;
             font-weight: 900;
-            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff0080, #00ffff, #ff00ff, #ff00ff);
+            background: linear-gradient(45deg, #FFD700, #FFA500, #FF8C00, #FFA500, #FFD700, #FFD700);
             background-size: 300% 300%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             animation: superRGB 4s ease-in-out infinite;
             text-shadow: 
-                0 0 40px rgba(255, 0, 255, 0.8),
-                0 0 80px rgba(0, 255, 255, 0.6),
-                0 0 120px rgba(255, 0, 255, 0.4);
+                0 0 40px rgba(255, 215, 0, 0.8),
+                0 0 80px rgba(255, 215, 0, 0.6),
+                0 0 120px rgba(255, 215, 0, 0.4);
             letter-spacing: 8px;
             transform: rotateX(10deg);
             margin-bottom: 20px;
@@ -109,10 +109,10 @@
             font-size: 1.4em;
             font-weight: 300;
             letter-spacing: 6px;
-            color: #00ffff;
+            color: #FFA500;
             text-shadow: 
-                0 0 20px rgba(0, 255, 255, 0.8),
-                0 0 40px rgba(0, 255, 255, 0.4);
+                0 0 20px rgba(255, 215, 0, 0.8),
+                0 0 40px rgba(255, 215, 0, 0.4);
             text-transform: uppercase;
             animation: flicker 3s ease-in-out infinite;
         }
@@ -127,10 +127,10 @@
             height: 3px;
             margin: 50px auto;
             max-width: 80%;
-            background: linear-gradient(90deg, transparent, #ff00ff, #00ffff, #ff00ff, transparent);
+            background: linear-gradient(90deg, transparent, #FFD700, #FFA500, #FFD700, transparent);
             box-shadow: 
-                0 0 20px rgba(255, 0, 255, 0.8),
-                0 0 40px rgba(0, 255, 255, 0.6);
+                0 0 20px rgba(255, 215, 0, 0.8),
+                0 0 40px rgba(255, 215, 0, 0.6);
             animation: dividerPulse 3s ease-in-out infinite;
         }
         
@@ -164,7 +164,7 @@
             left: -2px;
             right: -2px;
             bottom: -2px;
-            background: linear-gradient(60deg, #ff00ff, #00ffff, #ff0080, #00ffff, #ff00ff);
+            background: linear-gradient(60deg, #FFD700, #FFA500, #FF8C00, #FFA500, #FFD700);
             background-size: 300% 300%;
             border-radius: 20px;
             z-index: -1;
@@ -186,15 +186,15 @@
         .ranking-card:hover {
             transform: translateY(-10px) scale(1.03);
             box-shadow: 
-                0 20px 60px rgba(255, 0, 255, 0.4),
-                0 0 80px rgba(0, 255, 255, 0.3);
+                0 20px 60px rgba(255, 215, 0, 0.4),
+                0 0 80px rgba(255, 215, 0, 0.3);
         }
         
         .ranking-title {
             font-family: 'Orbitron', sans-serif;
             font-weight: 700;
             font-size: 1.2em;
-            background: linear-gradient(90deg, #ff00ff, #00ffff);
+            background: linear-gradient(90deg, #FFD700, #FFA500);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 10px;
@@ -216,7 +216,7 @@
             flex-wrap: wrap;
             align-items: center;
             margin-bottom: 50px;
-            border: 2px solid rgba(255, 0, 255, 0.2);
+            border: 2px solid rgba(255, 215, 0, 0.2);
             backdrop-filter: blur(20px);
         }
         
@@ -224,8 +224,8 @@
             font-family: 'Orbitron', sans-serif;
             font-weight: 700;
             font-size: 0.95em;
-            color: #00ffff;
-            text-shadow: 0 0 10px rgba(0, 255, 255, 0.6);
+            color: #FFA500;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
             letter-spacing: 2px;
             text-transform: uppercase;
         }
@@ -233,7 +233,7 @@
         .controls select, .controls input {
             padding: 14px 20px;
             background: rgba(20, 20, 20, 0.9);
-            border: 2px solid rgba(255, 0, 255, 0.4);
+            border: 2px solid rgba(255, 215, 0, 0.4);
             border-radius: 12px;
             color: #fff;
             font-size: 15px;
@@ -244,8 +244,8 @@
         }
         
         .controls select:focus, .controls input:focus {
-            border-color: #ff00ff;
-            box-shadow: 0 0 20px rgba(255, 0, 255, 0.6);
+            border-color: #FFD700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
             transform: translateY(-2px);
         }
         
@@ -258,8 +258,8 @@
         .view-btn {
             padding: 14px 30px;
             background: rgba(20, 20, 20, 0.9);
-            border: 2px solid rgba(255, 0, 255, 0.5);
-            color: #00ffff;
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            color: #FFA500;
             border-radius: 15px;
             cursor: pointer;
             font-family: 'Orbitron', sans-serif;
@@ -272,14 +272,14 @@
         
         .view-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(255, 0, 255, 0.5);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.5);
         }
         
         .view-btn.active {
-            background: linear-gradient(135deg, #ff00ff, #ff0080);
-            border-color: #ff00ff;
+            background: linear-gradient(135deg, #FFD700, #FF8C00);
+            border-color: #FFD700;
             color: #fff;
-            box-shadow: 0 0 30px rgba(255, 0, 255, 0.8);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
         }
         
         .bike-grid {
@@ -307,7 +307,7 @@
             left: -3px;
             right: -3px;
             bottom: -3px;
-            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff0080, #00ffff, #ff00ff);
+            background: linear-gradient(45deg, #FFD700, #FFA500, #FF8C00, #FFA500, #FFD700);
             background-size: 400% 400%;
             border-radius: 25px;
             z-index: -1;
@@ -323,15 +323,15 @@
         .bike-card:hover {
             transform: translateY(-15px) scale(1.02);
             box-shadow: 
-                0 30px 80px rgba(255, 0, 255, 0.5),
-                0 0 100px rgba(0, 255, 255, 0.3);
+                0 30px 80px rgba(255, 215, 0, 0.5),
+                0 0 100px rgba(255, 215, 0, 0.3);
         }
         
         .bike-name {
             font-family: 'Orbitron', sans-serif;
             font-size: 2em;
             font-weight: 900;
-            background: linear-gradient(135deg, #ff00ff, #00ffff);
+            background: linear-gradient(135deg, #FFD700, #FFA500);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 25px;
@@ -344,13 +344,13 @@
         }
         
         .value-badge {
-            background: linear-gradient(135deg, #ff00ff, #ff0080);
+            background: linear-gradient(135deg, #FFD700, #FF8C00);
             color: #fff;
             padding: 8px 16px;
             border-radius: 30px;
             font-size: 0.5em;
             font-weight: 900;
-            box-shadow: 0 0 20px rgba(255, 0, 255, 0.8);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
             animation: badgePulse 2s ease-in-out infinite;
             letter-spacing: 1px;
         }
@@ -365,7 +365,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 15px 0;
-            border-bottom: 1px solid rgba(255, 0, 255, 0.15);
+            border-bottom: 1px solid rgba(255, 215, 0, 0.15);
             transition: all 0.3s;
             position: relative;
             z-index: 1;
@@ -373,13 +373,13 @@
         
         .spec-row:hover {
             padding-left: 15px;
-            background: rgba(255, 0, 255, 0.05);
+            background: rgba(255, 215, 0, 0.05);
         }
         
         .spec-label {
             font-weight: 700;
-            color: #00ffff;
-            text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+            color: #FFA500;
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
             font-size: 1.05em;
             letter-spacing: 1px;
         }
@@ -394,7 +394,7 @@
         .features {
             margin-top: 25px;
             padding-top: 25px;
-            border-top: 2px solid rgba(255, 0, 255, 0.3);
+            border-top: 2px solid rgba(255, 215, 0, 0.3);
             position: relative;
             z-index: 1;
         }
@@ -403,7 +403,7 @@
             font-family: 'Orbitron', sans-serif;
             font-weight: 700;
             font-size: 1.2em;
-            background: linear-gradient(90deg, #ff00ff, #00ffff);
+            background: linear-gradient(90deg, #FFD700, #FFA500);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 12px;
@@ -432,7 +432,7 @@
         }
         
         th {
-            background: linear-gradient(135deg, #ff00ff, #ff0080, #00ffff);
+            background: linear-gradient(135deg, #FFD700, #FF8C00, #FFA500);
             color: #fff;
             padding: 20px;
             text-align: left;
@@ -446,12 +446,12 @@
         
         td {
             padding: 18px 20px;
-            border-bottom: 1px solid rgba(255, 0, 255, 0.15);
+            border-bottom: 1px solid rgba(255, 215, 0, 0.15);
             transition: all 0.3s;
         }
         
         tbody tr:hover {
-            background: rgba(255, 0, 255, 0.1);
+            background: rgba(255, 215, 0, 0.1);
         }
         
         .hidden {
@@ -464,7 +464,7 @@
             left: 0;
             width: 100%;
             height: 20px;
-            background: linear-gradient(transparent, rgba(0, 255, 255, 0.1), transparent);
+            background: linear-gradient(transparent, rgba(255, 215, 0, 0.1), transparent);
             animation: scanline 8s linear infinite;
             pointer-events: none;
             z-index: 1000;
@@ -522,7 +522,7 @@
             left: -3px;
             right: -3px;
             bottom: -3px;
-            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff0080, #00ffff, #ff00ff);
+            background: linear-gradient(45deg, #FFD700, #FFA500, #FF8C00, #FFA500, #FFD700);
             background-size: 400% 400%;
             border-radius: 50px;
             z-index: -1;
@@ -531,7 +531,7 @@
         
         .request-button:hover {
             transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 20px 60px rgba(255, 0, 255, 0.6);
+            box-shadow: 0 20px 60px rgba(255, 215, 0, 0.6);
         }
         
         /* Detail Page */
@@ -546,8 +546,8 @@
         .back-button {
             padding: 15px 30px;
             background: rgba(20, 20, 20, 0.9);
-            border: 2px solid rgba(255, 0, 255, 0.5);
-            color: #00ffff;
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            color: #FFA500;
             border-radius: 15px;
             cursor: pointer;
             font-family: 'Orbitron', sans-serif;
@@ -557,7 +557,7 @@
         }
         
         .back-button:hover {
-            background: linear-gradient(135deg, #ff00ff, #ff0080);
+            background: linear-gradient(135deg, #FFD700, #FF8C00);
             color: #fff;
             transform: translateY(-2px);
         }
@@ -578,7 +578,7 @@
             left: -3px;
             right: -3px;
             bottom: -3px;
-            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff0080, #00ffff, #ff00ff);
+            background: linear-gradient(45deg, #FFD700, #FFA500, #FF8C00, #FFA500, #FFD700);
             background-size: 400% 400%;
             border-radius: 25px;
             z-index: -1;
@@ -589,7 +589,7 @@
             font-family: 'Orbitron', sans-serif;
             font-size: 3em;
             font-weight: 900;
-            background: linear-gradient(135deg, #ff00ff, #00ffff);
+            background: linear-gradient(135deg, #FFD700, #FFA500);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 40px;
@@ -612,7 +612,7 @@
             left: -3px;
             right: -3px;
             bottom: -3px;
-            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff0080, #00ffff, #ff00ff);
+            background: linear-gradient(45deg, #FFD700, #FFA500, #FF8C00, #FFA500, #FFD700);
             background-size: 400% 400%;
             border-radius: 20px;
             z-index: -1;
@@ -631,7 +631,7 @@
             align-items: center;
             justify-content: center;
             background: rgba(30, 30, 30, 0.9);
-            color: #00ffff;
+            color: #FFA500;
             font-family: 'Orbitron', sans-serif;
             font-size: 1.5em;
             padding: 40px;
@@ -641,13 +641,13 @@
             background: rgba(20, 20, 20, 0.8);
             padding: 30px;
             border-radius: 15px;
-            border: 2px solid rgba(255, 0, 255, 0.3);
+            border: 2px solid rgba(255, 215, 0, 0.3);
             margin-bottom: 30px;
         }
         
         .detail-description h3 {
             font-family: 'Orbitron', sans-serif;
-            color: #00ffff;
+            color: #FFA500;
             margin-bottom: 15px;
             font-size: 1.5em;
         }
@@ -668,11 +668,11 @@
             background: rgba(20, 20, 20, 0.8);
             padding: 20px;
             border-radius: 12px;
-            border: 1px solid rgba(255, 0, 255, 0.3);
+            border: 1px solid rgba(255, 215, 0, 0.3);
         }
         
         .detail-spec-card h4 {
-            color: #ff00ff;
+            color: #FFD700;
             font-family: 'Orbitron', sans-serif;
             margin-bottom: 10px;
         }
