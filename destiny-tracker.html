@@ -584,7 +584,7 @@ async function runAI(){
     '{"itinerary":"4-Night Bahamas","nights":4,"phase":"Day 2 — En route Lookout Cay","confidence":"High","summary":"Expert 2-sentence narrative of current situation and where ship is headed","port_etas":[{"port":"Lookout Cay","arrive":"Mon Mar 23, 8:00 AM EST","depart":"Mon Mar 23, 5:00 PM EST","nm":45,"type":"Private Island"}],"home_arrive":"Thu Mar 26, 7:30 AM EST","home_hrs":67,"home_conf":"High","home_note":"Brief reasoning","cell":[{"time":"Mon Mar 23, 7:30–10:00 AM EST","where":"Approaching Lookout Cay","signal":"Good","mins":150}],"day":2,"total_days":4}';
 
   try{
-    var r=await fetch('https://corsproxy.io/?' + encodeURIComponent('https://api.groq.com/openai/v1/chat/completions'),{
+    var r=await fetch('https://corsproxy.org/?' + encodeURIComponent('https://api.groq.com/openai/v1/chat/completions'),{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+S.groqKey},
       body:JSON.stringify({model:'llama-3.1-8b-instant',max_tokens:1000,temperature:.3,messages:[{role:'user',content:prompt}]})
