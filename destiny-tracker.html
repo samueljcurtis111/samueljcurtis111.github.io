@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Destiny">
+<meta name="theme-color" content="#080808">
+<title>Disney Destiny · Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{--g:#C9A84C;--bg:#080808;--s1:#0d0d0d;--s2:#131313;--bd:#1a1a1a;--t1:#e8e0d0;--t2:#524c46;--t3:#1c1a18;--grn:#22c55e;--red:#ef4444;--amb:#f59e0b;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);color:var(--t1);font-family:'Cormorant Garamond',serif;overflow:hidden;-webkit-tap-highlight-color:transparent;overscroll-behavior:none;}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.4;}
+#app{display:flex;flex-direction:column;height:100vh;max-width:430px;margin:0 auto;position:relative;}
+#topbar{background:var(--s1);border-bottom:1px solid var(--bd);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:100;}
+.top-name{font-size:19px;font-weight:300;color:var(--t1);letter-spacing:.04em;}
+.top-meta{font-family:'DM Mono',monospace;font-size:8px;color:var(--t2);letter-spacing:.2em;margin-top:3px;}
+.status-pill{display:flex;align-items:center;gap:6px;}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.dot-live{background:var(--grn);box-shadow:0 0 8px #22c55e60;animation:pdot 2s infinite;}
+.dot-load{background:var(--amb);animation:pdot 1s infinite;}
+.dot-err{background:var(--red);}
+.dot-off{background:var(--t2);}
+#status-txt{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.15em;}
+#hero{background:var(--s1);border-bottom:1px solid var(--bd);padding:18px 20px 14px;flex-shrink:0;}
+.hero-row{display:flex;align-items:center;justify-content:space-between;}
+.hero-lbl{font-family:'DM Mono',monospace;font-size:8px;color:var(--t2);letter-spacing:.25em;margin-bottom:5px;}
+#hero-spd{font-size:54px;font-weight:300;line-height:1;letter-spacing:-.02em;color:var(--t2);transition:color .4s;}
+#hero-spd.moving{color:var(--g);}
+#hero-state{font-family:'DM Mono',monospace;font-size:9px;color:var(--t2);margin-top:5px;letter-spacing:.1em;}
+#compass{display:block;}
+#hdg-lbl{font-family:'DM Mono',monospace;font-size:8px;color:var(--t2);text-align:center;margin-top:4px;}
+#refresh-lbl{font-family:'DM Mono',monospace;font-size:8px;color:var(--t2);text-align:right;margin-top:4px;letter-spacing:.1em;}
+#tabbar{display:flex;background:var(--s1);border-bottom:1px solid var(--bd);flex-shrink:0;}
+.tb{flex:1;padding:11px 0 10px;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--t2);font-family:'DM Mono',monospace;font-size:7px;letter-spacing:.2em;transition:color .18s;}
+.tb.on{color:var(--g);border-bottom-color:var(--g);}
+.tb svg{opacity:.7;}
+.tb.on svg{opacity:1;}
+#content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;position:relative;}
+#content::-webkit-scrollbar{display:none;}
+.pane{display:none;animation:fi .2s ease;}
+.pane.on{display:block;}
+#pane-map{display:none;height:100%;position:relative;}
+#pane-map.on{display:block;}
+#map{width:100%;height:100%;}
+.map-ctrl{position:absolute;top:10px;right:10px;z-index:500;display:flex;flex-direction:column;gap:6px;}
+.mctrl{background:var(--s1);border:1px solid var(--bd);color:var(--t2);font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:.15em;padding:7px 9px;cursor:pointer;transition:color .15s,border-color .15s;}
+.mctrl.on{color:var(--g);border-color:var(--g)40;}
+.sec{padding:0 20px 24px;}
+.sec-title{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.28em;color:var(--g);padding:18px 0 12px;text-transform:uppercase;}
+.row{padding:12px 0;border-bottom:1px solid var(--bd);}
+.row:last-child{border-bottom:none;}
+.rlbl{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.22em;color:var(--t2);text-transform:uppercase;margin-bottom:5px;}
+.rval{font-family:'DM Mono',monospace;font-size:13px;font-weight:300;color:var(--t1);line-height:1.35;}
+.rval.gld{color:var(--g);}
+.rsub{font-family:'DM Mono',monospace;font-size:9px;color:var(--t2);margin-top:4px;line-height:1.5;}
+.sig-bars{display:flex;align-items:flex-end;gap:2.5px;height:20px;}
+.sbar{width:5px;border-radius:1.5px;transition:background .4s;}
+.call-num{font-size:54px;font-weight:300;line-height:1;letter-spacing:-.02em;}
+.prog-track{background:var(--bd);height:1px;margin-top:10px;}
+.prog-fill{height:1px;background:var(--g);transition:width .6s;}
+.wx-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
+.wxcard{background:var(--s2);border:1px solid var(--bd);padding:12px;}
+.wxlbl{font-family:'DM Mono',monospace;font-size:8px;color:var(--t2);letter-spacing:.18em;margin-bottom:6px;}
+.wxval{font-family:'DM Mono',monospace;font-size:18px;color:var(--t1);font-weight:300;}
+.wxunit{font-family:'DM Mono',monospace;font-size:8px;color:var(--t2);margin-top:3px;}
+.port-card{border-left:1px solid var(--bd);padding:10px 14px;margin-bottom:10px;}
+.port-card.near{border-left-color:var(--g);}
+.port-name{font-size:17px;font-weight:300;margin-bottom:4px;}
+.notif-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd);}
+.notif-body{font-family:'DM Mono',monospace;font-size:10px;color:var(--t1);line-height:1.5;}
+.notif-ts{font-family:'DM Mono',monospace;font-size:8px;color:var(--t2);margin-top:3px;}
+.btn{width:100%;background:none;border:1px solid var(--bd);color:var(--t1);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;padding:11px;cursor:pointer;margin-top:10px;text-align:center;}
+.btn-g{border-color:var(--g)40;color:var(--g);}
+.conf-badge{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.18em;padding:3px 9px;border:1px solid;display:inline-block;margin-top:10px;}
+#setup{position:fixed;inset:0;background:var(--bg);z-index:8000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;}
+.setup-title{font-size:30px;font-weight:300;margin-bottom:6px;}
+.setup-sub{font-family:'DM Mono',monospace;font-size:8px;color:var(--t2);letter-spacing:.22em;margin-bottom:44px;}
+.setup-lbl{font-family:'DM Mono',monospace;font-size:8px;color:var(--t2);letter-spacing:.2em;margin-bottom:8px;}
+.setup-input{width:100%;background:var(--s1);border:1px solid var(--bd);color:var(--t1);font-family:'DM Mono',monospace;font-size:11px;padding:12px 14px;margin-bottom:6px;outline:none;}
+.setup-input:focus{border-color:var(--g);}
+.setup-hint{font-family:'DM Mono',monospace;font-size:8px;color:var(--t2);line-height:2.2;margin-bottom:28px;letter-spacing:.1em;}
+.or-div{font-family:'DM Mono',monospace;font-size:8px;color:var(--t2);letter-spacing:.2em;text-align:center;margin:16px 0;}
+.leaflet-container{background:#e8e4df!important;}
+.ora-tip{background:var(--s1)!important;border:1px solid var(--bd)!important;color:var(--t2)!important;font-family:'DM Mono',monospace!important;font-size:8px!important;letter-spacing:.15em!important;border-radius:0!important;box-shadow:none!important;padding:4px 9px!important;}
+.ora-tip::before{display:none!important;}
+@keyframes pdot{0%,100%{opacity:1}50%{opacity:.2}}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes blink{0%,100%{opacity:.7}50%{opacity:.1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- SETUP SCREEN -->
+  <div id="setup">
+    <div style="width:100%;max-width:340px;">
+      <div class="setup-title">Destiny</div>
+      <div class="setup-sub">DISNEY DESTINY · LIVE NAVIGATION SYSTEM</div>
+
+      <div class="setup-lbl">GROQ API KEY (FREE)</div>
+      <input class="setup-input" id="g-key" type="password" placeholder="gsk_xxxxxxxxxxxx" autocomplete="off">
+      <div class="setup-hint">
+        GET FREE KEY AT CONSOLE.GROQ.COM<br>
+        CLICK API KEYS → CREATE API KEY<br>
+        KEY STARTS WITH gsk_
+      </div>
+
+      <div class="setup-hint">
+        NOTIFICATIONS VIA SCRIPTABLE WIDGET<br>
+        COPY WIDGET CODE FROM THE MORE TAB<br>
+        PASTE INTO SCRIPTABLE · ADD TO HOME SCREEN
+      </div>
+
+      <button class="btn btn-g" id="setup-go">LAUNCH TRACKER ↗</button>
+    </div>
+  </div>
+
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <div>
+      <div class="top-name">Disney Destiny</div>
+      <div class="top-meta">MMSI 311001540 · WISH CLASS · 2025</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="status-pill">
+        <div class="dot dot-off" id="sdot"></div>
+        <div id="status-txt" style="color:var(--t2)">STARTING</div>
+      </div>
+      <div id="refresh-lbl"></div>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <div id="hero">
+    <div class="hero-row">
+      <div>
+        <div class="hero-lbl">SPEED OVER GROUND</div>
+        <div id="hero-spd">—</div>
+        <div id="hero-state">AWAITING DATA</div>
+      </div>
+      <div>
+        <svg id="compass" width="62" height="62" viewBox="0 0 62 62">
+          <circle cx="31" cy="31" r="29" fill="none" stroke="var(--bd)" stroke-width="1"/>
+          <line x1="31" y1="3" x2="31" y2="8" stroke="var(--g)" stroke-width="1.5"/>
+          <line x1="59" y1="31" x2="54" y2="31" stroke="var(--g)" stroke-width="1.5"/>
+          <line x1="31" y1="59" x2="31" y2="54" stroke="var(--g)" stroke-width="1.5"/>
+          <line x1="3" y1="31" x2="8" y2="31" stroke="var(--g)" stroke-width="1.5"/>
+          <text x="31" y="17" text-anchor="middle" font-size="7" fill="var(--g)" font-family="'DM Mono',monospace">N</text>
+          <text x="46" y="34" text-anchor="middle" font-size="7" fill="var(--g)" font-family="'DM Mono',monospace">E</text>
+          <text x="31" y="51" text-anchor="middle" font-size="7" fill="var(--g)" font-family="'DM Mono',monospace">S</text>
+          <text x="16" y="34" text-anchor="middle" font-size="7" fill="var(--g)" font-family="'DM Mono',monospace">W</text>
+          <g id="needle" transform="rotate(0,31,31)">
+            <polygon points="31,5 33,31 31,37 29,31" fill="var(--g)"/>
+            <polygon points="31,57 33,31 31,41 29,31" fill="var(--t2)" opacity=".5"/>
+          </g>
+        </svg>
+        <div id="hdg-lbl">HDG —</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div id="tabbar">
+    <button class="tb on" onclick="goTab('map')">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="12" rx="1" stroke="currentColor" stroke-width="1"/><polyline points="1,6 4,4 8,7 12,5 15,6" stroke="currentColor" stroke-width=".9" fill="none"/><circle cx="8" cy="11" r="1.4" stroke="currentColor" stroke-width=".9"/></svg>
+      MAP
+    </button>
+    <button class="tb" onclick="goTab('live')">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1"/><line x1="8" y1="2" x2="8" y2="8" stroke="currentColor" stroke-width="1.1"/><line x1="8" y1="8" x2="12" y2="10" stroke="currentColor" stroke-width="1.3"/></svg>
+      LIVE
+    </button>
+    <button class="tb" onclick="goTab('wx')">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 10 Q4 7 7 7 Q7 4 10 4 Q13 4 13 7 Q15 7.5 15 10 Q15 12 13 12 H4 Q2 12 2 10 Q2 8 4 8Z" stroke="currentColor" stroke-width="1" fill="none"/><line x1="5" y1="14" x2="5" y2="14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="8" y1="14" x2="8" y2="14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="11" y1="14" x2="11" y2="14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      WX
+    </button>
+    <button class="tb" onclick="goTab('ai')">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polygon points="8,1 15,5 15,11 8,15 1,11 1,5" stroke="currentColor" stroke-width="1" fill="none"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1"/></svg>
+      AI
+    </button>
+    <button class="tb" onclick="goTab('more')">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="4" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="12" cy="8" r="1.3" fill="currentColor"/></svg>
+      MORE
+    </button>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content">
+
+    <!-- MAP -->
+    <div id="pane-map" class="on">
+      <div id="map"></div>
+      <div class="map-ctrl">
+        <button class="mctrl" id="ct-chart" onclick="toggleChart()">CHART</button>
+        <button class="mctrl" id="ct-fleet" onclick="toggleFleet()">FLEET</button>
+        <button class="mctrl" id="ct-replay" onclick="startReplay()">REPLAY</button>
+        <button class="mctrl" onclick="resetView()">RESET</button>
+      </div>
+    </div>
+
+    <!-- LIVE -->
+    <div id="pane-live" class="pane">
+      <div class="sec">
+        <div class="sec-title">SIGNAL STATUS · MINT MOBILE</div>
+        <div class="row" style="display:flex;align-items:center;gap:14px;">
+          <div class="sig-bars" id="sig-bars"></div>
+          <div>
+            <div id="sig-txt" style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.1em;color:var(--t2);">CALCULATING</div>
+            <div id="sig-sub" style="font-family:'DM Mono',monospace;font-size:9px;color:var(--t2);margin-top:3px;"></div>
+          </div>
+        </div>
+
+        <div class="sec-title">GOOD TIME TO CALL</div>
+        <div class="row" style="display:flex;align-items:baseline;gap:12px;">
+          <div class="call-num" id="call-num" style="color:var(--t2);">—</div>
+          <div>
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--t2);">/10</div>
+            <div id="call-lbl" style="font-family:'DM Mono',monospace;font-size:9px;color:var(--t2);margin-top:5px;"></div>
+          </div>
+        </div>
+
+        <div class="sec-title">NAVIGATION</div>
+        <div class="row"><div class="rlbl">COORDINATES</div><div class="rval" id="d-pos">—</div></div>
+        <div class="row"><div class="rlbl">COURSE OVER GROUND</div><div class="rval" id="d-cog">—</div></div>
+        <div class="row"><div class="rlbl">LOCAL TIME ON SHIP</div><div class="rval gld" id="d-time">—</div></div>
+        <div class="row"><div class="rlbl">DISTANCE FROM LAND</div><div class="rval" id="d-land">—</div></div>
+        <div class="row"><div class="rlbl">TO PORT EVERGLADES</div><div class="rval gld" id="d-home">—</div><div class="rsub" id="d-home-sub"></div></div>
+        <div class="row"><div class="rlbl">DRAFT</div><div class="rval" id="d-draft">—</div><div class="rsub">depth below waterline</div></div>
+        <div class="row"><div class="rlbl">AIS DESTINATION</div><div class="rval" id="d-dest">—</div></div>
+        <div class="row"><div class="rlbl">NAV STATUS</div><div class="rval" id="d-nst">—</div></div>
+        <div class="row"><div class="rlbl">DATA SOURCE</div><div class="rval" id="d-src">—</div></div>
+
+        <div class="sec-title">CRUISE PROGRESS</div>
+        <div class="row">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--t2);" id="prog-lbl">AWAITING AI DATA</div>
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--g);" id="prog-pct"></div>
+          </div>
+          <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+        </div>
+
+        <div class="sec-title">VESSEL ANALYTICS</div>
+        <div class="row"><div class="rlbl">ESTIMATED FUEL BURN</div><div class="rval" id="d-fuel">—</div></div>
+        <div class="row"><div class="rlbl">SHIP CLASS</div><div class="rval">Wish-class · Heroes &amp; Villains</div></div>
+        <div class="row"><div class="rlbl">GROSS TONNAGE</div><div class="rval">144,000 GRT</div></div>
+        <div class="row"><div class="rlbl">CAPACITY</div><div class="rval">4,000 passengers · 1,555 crew</div></div>
+        <div class="row"><div class="rlbl">DIMENSIONS</div><div class="rval">341 m × 37.9 m</div></div>
+        <div class="row"><div class="rlbl">CALLSIGN</div><div class="rval" id="d-cs">—</div></div>
+        <div class="row"><div class="rlbl">LAST AIS UPDATE</div><div class="rval" id="d-upd">—</div></div>
+
+        <div class="sec-title">SIGNAL FORECAST · NEXT 24 HRS</div>
+        <div id="sig-forecast">
+          <div class="row"><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--t2);">Awaiting AI prediction…</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEATHER -->
+    <div id="pane-wx" class="pane">
+      <div class="sec">
+        <div class="sec-title">CONDITIONS AT SHIP</div>
+        <div class="wx-grid">
+          <div class="wxcard"><div class="wxlbl">WIND</div><div class="wxval" id="wx-wind">—</div><div class="wxunit">knots</div></div>
+          <div class="wxcard"><div class="wxlbl">WAVE HEIGHT</div><div class="wxval" id="wx-wave">—</div><div class="wxunit">feet</div></div>
+          <div class="wxcard"><div class="wxlbl">SEA TEMP</div><div class="wxval" id="wx-sst">—</div><div class="wxunit">°F</div></div>
+          <div class="wxcard"><div class="wxlbl">UV INDEX</div><div class="wxval" id="wx-uv">—</div><div class="wxunit" id="wx-uv-lbl">—</div></div>
+          <div class="wxcard"><div class="wxlbl">VISIBILITY</div><div class="wxval" id="wx-vis">—</div><div class="wxunit">miles</div></div>
+          <div class="wxcard"><div class="wxlbl">SWELL DIR</div><div class="wxval" id="wx-swell">—</div><div class="wxunit">from</div></div>
+        </div>
+        <div class="row" style="margin-top:14px;"><div class="rlbl">WIND DIRECTION</div><div class="rval" id="wx-wdir">—</div></div>
+        <div class="row"><div class="rlbl">SUNRISE AT SHIP</div><div class="rval" id="wx-sr">—</div></div>
+        <div class="row"><div class="rlbl">SUNSET AT SHIP</div><div class="rval" id="wx-ss">—</div></div>
+        <div class="row"><div class="rlbl">TROPICAL STORM ACTIVITY</div><div class="rval" id="wx-storm">CHECKING···</div></div>
+
+        <div class="sec-title">PORT WEATHER FORECASTS</div>
+        <div id="port-wx">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--t2);">Awaiting AI itinerary data…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI -->
+    <div id="pane-ai" class="pane">
+      <div class="sec">
+        <div class="sec-title">ROUTE INTELLIGENCE · GROQ AI</div>
+        <div id="ai-body">
+          <div style="padding:40px 0;text-align:center;">
+            <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--g);letter-spacing:.28em;animation:blink 1.5s infinite;" id="ai-load-msg">COMPUTING ROUTE···</div>
+            <div id="ai-steps" style="margin-top:20px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MORE -->
+    <div id="pane-more" class="pane">
+      <div class="sec">
+
+        <div class="sec-title">NEAREST DISNEY PORTS</div>
+        <div id="ports-near"></div>
+
+        <div class="sec-title">SHARE CARD</div>
+        <div class="row">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--t2);margin-bottom:12px;">GENERATE A CARD SHOWING CURRENT POSITION + ETA</div>
+          <canvas id="share-cv" width="800" height="420" style="display:none;"></canvas>
+          <img id="share-img" style="width:100%;border:1px solid var(--bd);display:none;margin-bottom:8px;">
+          <button class="btn btn-g" onclick="makeShareCard()">GENERATE SHARE CARD</button>
+          <a id="share-dl" style="display:none;"><button class="btn" style="margin-top:8px;">SAVE TO PHOTOS</button></a>
+        </div>
+
+        <div class="sec-title">NOTIFICATION LOG</div>
+        <div id="notif-log"><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--t2);padding:10px 0;">No notifications yet.</div></div>
+
+        <div class="sec-title">SCRIPTABLE WIDGET</div>
+        <div class="row">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--t2);line-height:2.3;margin-bottom:12px;">
+            1. INSTALL SCRIPTABLE (FREE · APP STORE)<br>
+            2. CREATE NEW SCRIPT IN APP<br>
+            3. PASTE THE COPIED CODE<br>
+            4. ADD SCRIPTABLE WIDGET TO HOME SCREEN<br>
+            5. SELECT THIS SCRIPT IN WIDGET SETTINGS
+          </div>
+          <button class="btn btn-g" onclick="copyWidget()">COPY WIDGET CODE</button>
+        </div>
+
+        <div class="sec-title">SETTINGS</div>
+        <div class="row"><div class="rlbl">TRACKER VERSION</div><div class="rval">Disney Destiny · v1.0</div></div>
+        <div class="row"><div class="rlbl">HOME PORT</div><div class="rval">Port Everglades · Fort Lauderdale, FL</div></div>
+        <button class="btn" onclick="openSetup()">UPDATE GROQ API KEY</button>
+        <button class="btn" style="margin-top:8px;color:var(--red);border-color:var(--red)20;" onclick="clearData()">CLEAR ALL SAVED DATA</button>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /app -->
+
+<script>
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// CONSTANTS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+var SHIP = { name:'Disney Destiny', mmsi:'311001540', imo:'9834741', len:341, beam:37.9, grt:144000, year:2025, cls:'Wish', pax:4000, crew:1555 };
+var HOME = { lat:26.0810, lon:-80.1137, name:'Port Everglades, FL' };
+var COASTS = [{lat:26.08,lon:-80.11},{lat:25.78,lon:-80.19},{lat:25.05,lon:-77.36},{lat:26.08,lon:-77.53},{lat:24.84,lon:-76.27},{lat:24.56,lon:-81.78},{lat:18.47,lon:-66.11},{lat:20.51,lon:-86.95},{lat:18.43,lon:-64.63},{lat:19.29,lon:-81.37},{lat:17.13,lon:-61.85},{lat:18.02,lon:-63.05},{lat:18.50,lon:-77.66}];
+var PORTS = [
+  {n:'Nassau, Bahamas',lat:25.0782,lon:-77.3382,cam:'https://www.nassaucams.com'},
+  {n:'Castaway Cay',lat:26.0833,lon:-77.5334,cam:null},
+  {n:'Lookout Cay · Lighthouse Point',lat:24.838,lon:-76.267,cam:null},
+  {n:'Cozumel, Mexico',lat:20.509,lon:-86.951,cam:'https://www.cozumelinsider.com'},
+  {n:'Key West, FL',lat:24.5551,lon:-81.8015,cam:'https://earthcam.com/usa/florida/keywest/'},
+  {n:'Grand Cayman',lat:19.2951,lon:-81.3832,cam:null},
+  {n:'St. Thomas, USVI',lat:18.3404,lon:-64.9307,cam:null},
+  {n:'St. Maarten',lat:18.0179,lon:-63.0443,cam:null},
+  {n:'San Juan, PR',lat:18.4637,lon:-66.1185,cam:null},
+  {n:'Falmouth, Jamaica',lat:18.4943,lon:-77.6601,cam:null},
+];
+var FLEET = [
+  {name:'Disney Magic',mmsi:'311040600'},{name:'Disney Wonder',mmsi:'311040700'},
+  {name:'Disney Dream',mmsi:'311040800'},{name:'Disney Fantasy',mmsi:'311040900'},
+  {name:'Disney Wish',mmsi:'311041000'},{name:'Disney Treasure',mmsi:'311041100'},
+];
+var DIRS = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// STATE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+var S = {
+  data: null, weather: null, ai: null,
+  history: [],
+  fleetData: {},
+  groqKey: localStorage.getItem('groqKey') || '',
+  log: JSON.parse(localStorage.getItem('nlog') || '[]'),
+  tab: 'map',
+  map: null, shipMark: null, wakeLine: null,
+  fleetMarks: {}, stormMarks: [],
+  chartMode: false, fleetOn: true,
+  prevSpeed: null, anomalyFired: false,
+  sigNotifTs: 0,
+  tick: 60, tickTimer: null,
+};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// UTILS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function hav(a,b,c,d){var R=3440.1,r=Math.PI/180,x=Math.pow(Math.sin((c-a)*r/2),2)+Math.cos(a*r)*Math.cos(c*r)*Math.pow(Math.sin((d-b)*r/2),2);return R*2*Math.asin(Math.sqrt(x));}
+function nm2mi(n){return n*1.15078;}
+function cmp(h){return h==null?'—':DIRS[Math.round(h/22.5)%16];}
+function nst(c){return {0:'Underway (Engine)',1:'At Anchor',2:'Not Under Command',5:'Moored',8:'Underway (Sail)'}[c]||'Code '+c;}
+function coastDist(lat,lon){return Math.min.apply(null,COASTS.map(function(p){return hav(lat,lon,p.lat,p.lon);}));}
+function shipState(d){if(!d)return{lbl:'UNKNOWN',col:'var(--t2)'};if(d.status===1)return{lbl:'AT ANCHOR',col:'var(--amb)'};if(d.status===5)return{lbl:'MOORED · IN PORT',col:'var(--grn)'};if(d.speed<1)return{lbl:'STATIONARY',col:'var(--amb)'};if(d.speed<6)return{lbl:'MANEUVERING',col:'var(--amb)'};return{lbl:'UNDERWAY',col:'var(--g)'};}
+function fuelBurn(spd){var r=(spd||0)/21;return Math.round(6200*Math.pow(Math.max(0,r),2.7));}
+function shipLocalTime(lon){var off=Math.round(lon/15);var now=new Date();var utc=now.getTime()+now.getTimezoneOffset()*60000;return new Date(utc+off*3600000);}
+function callScore(d,dcMi){if(!d)return 0;var s=0;if(dcMi<=2)s+=4;else if(dcMi<=3.5)s+=3;else if(dcMi<=6)s+=1;var lt=shipLocalTime(d.lon),h=lt.getHours();if(h>=9&&h<=21)s+=3;else if(h>=7&&h<=22)s+=1;if(d.status===5||d.status===1)s+=2;else if(d.speed<5)s+=1;if(d.speed<2)s+=1;return Math.min(10,s);}
+function set$(id,val,col){var el=document.getElementById(id);if(!el)return;el.textContent=val;if(col)el.style.color=col;}
+function confCol(c){return c==='High'?'var(--grn)':c==='Medium'?'var(--amb)':'var(--red)';}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// AIS FETCH — MULTI SOURCE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function parseHTML(h){
+  function gn(k){var m=h.match(new RegExp('"'+k+'"\\s*:\\s*"?(-?[\\d.]+)"?'));return m?parseFloat(m[1]):null;}
+  function gs(k){var m=h.match(new RegExp('"'+k+'"\\s*:\\s*"([^"]+)"'));return m?m[1]:null;}
+  var lat=gn('LATITUDE'),lon=gn('LONGITUDE');
+  if(!lat||!lon||Math.abs(lat)>90||Math.abs(lon)>180)return null;
+  var spd=gn('SPEED');if(spd!=null&&spd>35)spd/=10;
+  var crs=gn('COURSE');if(crs!=null&&crs>360)crs/=10;
+  var hdg=gn('HEADING');if(hdg!=null&&hdg>360)hdg=null;
+  var dft=gn('DRAUGHT');if(dft!=null&&dft>25)dft/=10;
+  return {lat:lat,lon:lon,speed:spd,heading:hdg,course:crs,status:gn('STATUS'),destination:gs('DESTINATION'),eta:gs('ETA'),draught:dft,callsign:gs('CALLSIGN'),ts:gs('TIMESTAMP')};
+}
+async function fetchMMSI(mmsi,quiet){
+  var sources=[
+    {name:'MarineTraffic',url:'https://www.marinetraffic.com/en/ais/details/ships/mmsi:'+mmsi},
+    {name:'VesselFinder', url:'https://www.vesselfinder.com/vessels/details/'+mmsi},
+    {name:'MyShipTracking',url:'https://www.myshiptracking.com/?mmsi='+mmsi},
+  ];
+  for(var i=0;i<sources.length;i++){
+    var src=sources[i];
+    try{
+      if(!quiet)setStatus('load','FETCHING · '+src.name.toUpperCase());
+      var r=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(src.url),{signal:AbortSignal.timeout(13000)});
+      var j=await r.json();
+      var d=parseHTML(j.contents||'');
+      if(d){d.source=src.name;return d;}
+    }catch(e){}
+  }
+  return null;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// STATUS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function setStatus(type,txt){
+  var dot=document.getElementById('sdot');
+  var stxt=document.getElementById('status-txt');
+  if(!dot||!stxt)return;
+  dot.className='dot dot-'+({'live':'live','load':'load','err':'err'}[type]||'off');
+  stxt.textContent=txt;
+  stxt.style.color=type==='live'?'var(--grn)':type==='err'?'var(--red)':type==='load'?'var(--amb)':'var(--t2)';
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// LOAD ALL
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+async function loadAll(){
+  var d=await fetchMMSI(SHIP.mmsi,false);
+  if(d){
+    // Anomaly detection
+    if(S.prevSpeed!=null&&S.prevSpeed>8&&d.speed<S.prevSpeed-6&&!S.anomalyFired){
+      S.anomalyFired=true;
+      
+      addLog('⚡','Speed anomaly detected · '+S.prevSpeed.toFixed(1)+'→'+d.speed.toFixed(1)+' kn');
+    }else if(d.speed>10){S.anomalyFired=false;}
+    // Anchor change
+    if(S.data&&S.data.status!==1&&d.status===1){
+      addLog('⚓','Ship anchored at '+d.lat.toFixed(3)+'°N');
+    }
+    // Cell signal
+    var dcNm=coastDist(d.lat,d.lon);
+    var dcMi=nm2mi(dcNm);
+    if(dcMi<=3.5&&Date.now()-S.sigNotifTs>1800000){
+      S.sigNotifTs=Date.now();
+      
+      addLog('📶','Signal window detected · '+dcMi.toFixed(1)+' mi from coast');
+    }
+    S.prevSpeed=d.speed;
+    S.history.push({lat:d.lat,lon:d.lon,ts:Date.now(),spd:d.speed});
+    if(S.history.length>300)S.history.shift();
+    S.data=d;
+    setStatus('live','LIVE · '+(d.source||'AIS').toUpperCase());
+    updateHero(d);
+    updateLive(d);
+    updateMap(d);
+    fetchWeather(d.lat,d.lon);
+  }else{
+    setStatus('err','AIS UNAVAILABLE');
+  }
+  document.getElementById('refresh-lbl').textContent='UPDATED '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+
+async function fetchWeather(lat,lon){
+  try{
+    var url='https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=wind_speed_10m,wind_direction_10m,uv_index,visibility,wave_height,swell_wave_direction,sea_surface_temperature&daily=sunrise,sunset&wind_speed_unit=kn&temperature_unit=fahrenheit&timezone=auto&forecast_days=1';
+    var r=await fetch(url,{signal:AbortSignal.timeout(10000)});
+    var j=await r.json();
+    S.weather=j;
+    updateWeather(j);
+  }catch(e){}
+  // Storm check
+  try{
+    var sr=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent('https://www.nhc.noaa.gov/nhc_at1.xml'),{signal:AbortSignal.timeout(10000)});
+    var sj=await sr.json();
+    var ct=sj.contents||'';
+    var hasStorm=ct.includes('<item>')&&ct.toLowerCase().includes('advisory');
+    set$('wx-storm',hasStorm?'⚠ ACTIVE STORM ADVISORY — CHECK NHC.NOAA.GOV':'NO ACTIVE STORMS IN ATLANTIC BASIN',hasStorm?'var(--red)':'var(--grn)');
+    if(hasStorm){addLog('🌀','Storm Advisory · check NHC.NOAA.GOV');}
+  }catch(e){set$('wx-storm','UNABLE TO CHECK');}
+}
+
+async function fetchFleet(){
+  if(!S.fleetOn||!S.map)return;
+  for(var i=0;i<FLEET.length;i++){
+    var f=FLEET[i];
+    try{
+      var d=await fetchMMSI(f.mmsi,true);
+      if(d){
+        S.fleetData[f.mmsi]={lat:d.lat,lon:d.lon,name:f.name,speed:d.speed};
+        updateFleetMarker(f.mmsi,d.lat,d.lon,f.name);
+      }
+    }catch(e){}
+    await new Promise(function(res){setTimeout(res,1200);});
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// GROQ AI
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+async function runAI(){
+  if(!S.groqKey||!S.data)return;
+  var d=S.data;
+  var dp=hav(d.lat,d.lon,HOME.lat,HOME.lon);
+  var dcNm=coastDist(d.lat,d.lon);
+  var near=PORTS.map(function(p){return {n:p.n,dist:hav(d.lat,d.lon,p.lat,p.lon)};}).sort(function(a,b){return a.dist-b.dist;});
+  var steps=['ANALYZING POSITION','MATCHING ITINERARY','COMPUTING PORT ETAs','MODELING CELL WINDOWS','CALCULATING RETURN'];
+  var se=document.getElementById('ai-steps');
+  if(se){se.innerHTML=steps.map(function(t,i){return '<div style="font-family:\'DM Mono\',monospace;font-size:8px;color:var(--t2);letter-spacing:.15em;margin-bottom:9px;animation:blink '+(1+i*.2)+'s infinite">· '+t+'</div>';}).join('');}
+
+  var prompt='Expert maritime navigator + Disney Cruise Line analyst. Date: '+new Date().toDateString()+' ('+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date().getDay()]+').\n'+
+    'SHIP: Disney Destiny | MMSI:311001540 | Wish-class | 2025 | 4000 pax\n'+
+    'HOME PORT: Port Everglades, Fort Lauderdale FL (26.081N, 80.114W) — NOT Port Canaveral\n'+
+    'POSITION: '+d.lat.toFixed(5)+'N, '+d.lon.toFixed(5)+'W\n'+
+    'SPEED: '+(d.speed||'?')+'kn | HDG: '+(d.heading||'?')+'° ('+cmp(d.heading)+') | COG: '+(d.course||'?')+'°\n'+
+    'STATUS: '+nst(d.status)+' | DRAFT: '+(d.draught||'?')+'m\n'+
+    'AIS DEST: '+(d.destination||'none')+' | AIS ETA: '+(d.eta||'none')+'\n'+
+    'TO PORT EVERGLADES: '+dp.toFixed(1)+'nm | NEAREST COAST: '+nm2mi(dcNm).toFixed(1)+'mi\n'+
+    'NEAREST PORTS: '+near.slice(0,5).map(function(p){return p.n+'('+p.dist.toFixed(0)+'nm)';}).join(', ')+'\n\n'+
+    'Disney Destiny 2026 itineraries ALL from Port Everglades (Fort Lauderdale):\n'+
+    '- 4-night Bahamas: Lookout Cay (Eleuthera, 24.84N 76.27W) + Castaway Cay\n'+
+    '- 4-night Bahamas: Nassau + Lookout Cay\n'+
+    '- 5-night Bahamas: Lookout Cay + Castaway Cay + Nassau\n'+
+    '- 5-night W.Caribbean: Cozumel + Castaway Cay\n'+
+    'Cruise speed 18-22kn, port approach 12-16kn. Port dwell 8-12hrs. T-Mobile/Mint within 3.5mi of land. March: E-SE trades 15-25kn, seas 3-5ft.\n\n'+
+    'Return ONLY valid JSON no markdown, no explanation:\n'+
+    '{"itinerary":"4-Night Bahamas","nights":4,"phase":"Day 2 — En route Lookout Cay","confidence":"High","summary":"Expert 2-sentence narrative of current situation and where ship is headed","port_etas":[{"port":"Lookout Cay","arrive":"Mon Mar 23, 8:00 AM EST","depart":"Mon Mar 23, 5:00 PM EST","nm":45,"type":"Private Island"}],"home_arrive":"Thu Mar 26, 7:30 AM EST","home_hrs":67,"home_conf":"High","home_note":"Brief reasoning","cell":[{"time":"Mon Mar 23, 7:30–10:00 AM EST","where":"Approaching Lookout Cay","signal":"Good","mins":150}],"day":2,"total_days":4}';
+
+  try{
+    var r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+S.groqKey},
+      body:JSON.stringify({model:'llama-3.1-8b-instant',max_tokens:1000,temperature:.3,messages:[{role:'user',content:prompt}]})
+    });
+    var j=await r.json();
+    var raw=j.choices[0].message.content.replace(/```json\n?|```/g,'').trim();
+    S.ai=JSON.parse(raw);
+    renderAI(S.ai);
+    updateProgress(S.ai);
+    updateSigForecast(S.ai);
+    renderPortWx(S.ai);
+    // Port approach alert
+    if(S.ai.port_etas&&S.ai.port_etas.length&&S.ai.port_etas[0].nm<20){
+
+      addLog('🚢','Approaching '+S.ai.port_etas[0].port+' · '+S.ai.port_etas[0].arrive);
+    }
+    // Home approach
+    if(S.ai.home_hrs&&S.ai.home_hrs<6){
+      
+      addLog('🏠','Ship returning · ETA '+S.ai.home_arrive);
+    }
+  }catch(e){
+    var ab=document.getElementById('ai-body');
+    if(ab)ab.innerHTML='<div class="row"><div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--red);">AI ERROR — Check Groq key in Settings</div></div>';
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// UI UPDATES
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function updateHero(d){
+  var spd=d.speed!=null?d.speed.toFixed(1):'—';
+  var sel=document.getElementById('hero-spd');
+  if(sel){sel.textContent=spd;sel.className=d.speed>1?'moving':'';}
+  var ss=shipState(d);
+  set$('hero-state',ss.lbl);
+  document.getElementById('hero-state').style.color=ss.col;
+  var needle=document.getElementById('needle');
+  if(needle&&d.heading!=null)needle.setAttribute('transform','rotate('+d.heading+',31,31)');
+  set$('hdg-lbl',d.heading!=null?(d.heading+'° '+cmp(d.heading)):'HDG —');
+}
+
+function updateLive(d){
+  var dcNm=coastDist(d.lat,d.lon);
+  var dcMi=nm2mi(dcNm);
+  var dp=hav(d.lat,d.lon,HOME.lat,HOME.lon);
+  var hasSig=dcMi<=3.5,edgeSig=dcMi<=7;
+  var sigCol=hasSig?'var(--grn)':edgeSig?'var(--amb)':'var(--red)';
+  var bars=hasSig?5:edgeSig?2:0;
+  // Signal bars
+  var bel=document.getElementById('sig-bars');
+  if(bel){bel.innerHTML=[1,2,3,4,5].map(function(i){return '<div class="sbar" style="height:'+(3.6*i)+'px;background:'+(i<=bars?sigCol:'var(--t3)')+'"></div>';}).join('');}
+  set$('sig-txt',hasSig?'SIGNAL LIKELY':edgeSig?'EDGE SIGNAL':'NO SERVICE',sigCol);
+  set$('sig-sub',dcMi.toFixed(1)+' mi from land · Mint / T-Mobile');
+  // Call score
+  var sc=callScore(d,dcMi);
+  var scCol=sc>=7?'var(--grn)':sc>=4?'var(--amb)':'var(--red)';
+  set$('call-num',sc,scCol);
+  set$('call-lbl',sc>=8?'GREAT TIME TO CALL':sc>=5?'POSSIBLE — TRY IT':sc>=3?'UNLIKELY OFFSHORE':'NOT REACHABLE NOW');
+  // Nav data
+  set$('d-pos',d.lat.toFixed(4)+'° N   '+Math.abs(d.lon).toFixed(4)+'° W');
+  set$('d-cog',d.course!=null?d.course.toFixed(1)+' °':'—');
+  var lt=shipLocalTime(d.lon);
+  set$('d-time',lt.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:true})+' · '+lt.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'}));
+  set$('d-land',dcMi.toFixed(1)+' mi  ·  '+dcNm.toFixed(1)+' nm');
+  set$('d-home',dp.toFixed(0)+' nm  ·  '+nm2mi(dp).toFixed(0)+' mi');
+  var simETA=d.speed>0.5?dp/d.speed:null;
+  set$('d-home-sub',simETA?'~'+simETA.toFixed(1)+' hrs direct at current speed':'');
+  set$('d-draft',d.draught!=null?d.draught.toFixed(1)+' m':'—');
+  set$('d-dest',d.destination||'Not broadcast');
+  set$('d-nst',nst(d.status));
+  set$('d-src',d.source||'—');
+  set$('d-cs',d.callsign||'—');
+  set$('d-upd',new Date().toLocaleTimeString());
+  set$('d-fuel',fuelBurn(d.speed).toLocaleString()+' gal/hr est.');
+  // Nearby ports
+  var near=PORTS.map(function(p){return {n:p.n,lat:p.lat,lon:p.lon,cam:p.cam,d:hav(d.lat,d.lon,p.lat,p.lon)};}).sort(function(a,b){return a.d-b.d;});
+  var pel=document.getElementById('ports-near');
+  if(pel){pel.innerHTML=near.slice(0,5).map(function(p,i){return '<div class="port-card'+(i===0?' near':'')+'"><div class="port-name" style="color:'+(i===0?'var(--g)':'var(--t1)')+'">'+p.n+'</div><div style="font-family:\'DM Mono\',monospace;font-size:11px;color:'+(i===0?'var(--g)':'var(--t2)')+'">'+p.d.toFixed(0)+' nm  ·  '+nm2mi(p.d).toFixed(0)+' mi</div>'+(p.cam?'<a href="'+p.cam+'" target="_blank" style="font-family:\'DM Mono\',monospace;font-size:8px;color:var(--g);text-decoration:none;letter-spacing:.15em;display:block;margin-top:5px;">LIVE CAM ↗</a>':'')+'</div>';}).join('');}
+}
+
+function updateWeather(j){
+  if(!j||!j.current)return;
+  var c=j.current;
+  var uv=c.uv_index;
+  var uvL=uv<3?'LOW':uv<6?'MODERATE':uv<8?'HIGH':uv<11?'VERY HIGH':'EXTREME';
+  var sstF=c.sea_surface_temperature!=null?((c.sea_surface_temperature*9/5+32).toFixed(0)):'—';
+  var waveFt=c.wave_height!=null?(c.wave_height*3.28084).toFixed(1):'—';
+  set$('wx-wind',c.wind_speed_10m!=null?c.wind_speed_10m.toFixed(0):'—');
+  set$('wx-wave',waveFt);
+  set$('wx-sst',sstF);
+  set$('wx-uv',uv!=null?uv.toFixed(0):'—');
+  set$('wx-uv-lbl',uvL);
+  set$('wx-vis',c.visibility!=null?(c.visibility/1609).toFixed(0):'—');
+  set$('wx-swell',c.swell_wave_direction!=null?cmp(c.swell_wave_direction):'—');
+  set$('wx-wdir',c.wind_direction_10m!=null?c.wind_direction_10m+'° ('+cmp(c.wind_direction_10m)+')':'—');
+  if(j.daily&&j.daily.sunrise){
+    set$('wx-sr',new Date(j.daily.sunrise[0]).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+    set$('wx-ss',new Date(j.daily.sunset[0]).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+  }
+  // High UV alert
+  if(uv>=8){addLog('☀️','UV '+uv.toFixed(0)+' ('+uvL+') at ship position');}
+}
+
+function renderAI(ai){
+  var el=document.getElementById('ai-body');
+  if(!el)return;
+  var cc=confCol(ai.confidence);
+  el.innerHTML='<div style="padding:16px 0 12px;border-bottom:1px solid var(--bd);"><div style="font-family:\'DM Mono\',monospace;font-size:8px;color:var(--t2);letter-spacing:.25em;margin-bottom:6px;">CRUISE TYPE</div><div style="font-size:23px;font-weight:300;margin-bottom:6px;">'+ai.itinerary+'</div><div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--g);letter-spacing:.08em;">'+ai.phase+'</div></div>'+
+    '<div style="padding:14px 0;border-bottom:1px solid var(--bd);"><div style="font-size:15px;font-weight:300;line-height:1.72;color:var(--t1);">'+ai.summary+'</div><span class="conf-badge" style="color:'+cc+';border-color:'+cc.replace(')',', 0.3)').replace('var','rgba').replace('(--grn','(34,197,94').replace('(--amb','(245,158,11').replace('(--red','(239,68,68')+'">CONFIDENCE: '+(ai.confidence||'—').toUpperCase()+'</span></div>'+
+    (ai.port_etas&&ai.port_etas.length?'<div style="padding:14px 0;border-bottom:1px solid var(--bd);"><div style="font-family:\'DM Mono\',monospace;font-size:8px;color:var(--t2);letter-spacing:.25em;margin-bottom:12px;">PORT CALLS</div>'+ai.port_etas.map(function(p){return '<div style="padding:11px 0;border-bottom:1px solid var(--t3);"><div style="display:flex;justify-content:space-between;margin-bottom:5px;"><div style="font-size:16px;font-weight:300;">'+p.port+'</div><div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--t2);">'+(p.nm||'?')+' nm</div></div><div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--g);margin-bottom:2px;">▸ '+p.arrive+'</div><div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--t2);margin-bottom:3px;">◂ '+p.depart+'</div><div style="font-family:\'DM Mono\',monospace;font-size:8px;color:var(--t2);">'+p.type+'</div></div>';}).join('')+'</div>':'')+ 
+    (ai.home_arrive?'<div style="padding:14px 0;border-bottom:1px solid var(--bd);"><div style="font-family:\'DM Mono\',monospace;font-size:8px;color:var(--t2);letter-spacing:.25em;margin-bottom:8px;">RETURN · PORT EVERGLADES</div><div style="font-size:20px;font-weight:300;color:var(--g);margin-bottom:6px;">'+ai.home_arrive+'</div><div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--t2);">'+(ai.home_hrs||'?')+' hrs from now · confidence: <span style="color:'+confCol(ai.home_conf)+';">'+(ai.home_conf||'—')+'</span></div>'+(ai.home_note?'<div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--t2);margin-top:8px;line-height:1.6;">'+ai.home_note+'</div>':'')+'</div>':'')+
+    (ai.cell&&ai.cell.length?'<div style="padding:14px 0;"><div style="font-family:\'DM Mono\',monospace;font-size:8px;color:var(--t2);letter-spacing:.25em;margin-bottom:12px;">MINT MOBILE SIGNAL WINDOWS</div>'+ai.cell.map(function(w){return '<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--t3);"><div style="width:6px;height:6px;border-radius:50%;background:var(--grn);margin-top:4px;flex-shrink:0;box-shadow:0 0 8px #22c55e50;"></div><div><div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--g);margin-bottom:3px;">'+w.time+'</div><div style="font-size:14px;font-weight:300;margin-bottom:3px;">'+w.where+'</div><div style="font-family:\'DM Mono\',monospace;font-size:8px;color:var(--t2);">~'+w.mins+' min · '+w.signal+' signal</div></div></div>';}).join('')+'</div>':'');
+}
+
+function updateProgress(ai){
+  if(!ai)return;
+  var day=ai.day||1,total=ai.total_days||ai.nights||4;
+  var pct=Math.min(100,(day/total)*100);
+  set$('prog-lbl','DAY '+day+' OF '+total);
+  set$('prog-pct',Math.round(pct)+'%');
+  var pf=document.getElementById('prog-fill');
+  if(pf)pf.style.width=pct+'%';
+}
+
+function updateSigForecast(ai){
+  var el=document.getElementById('sig-forecast');
+  if(!el||!ai||!ai.cell||!ai.cell.length)return;
+  el.innerHTML=ai.cell.map(function(w){return '<div class="row"><div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--g);margin-bottom:3px;">'+w.time+'</div><div style="font-size:13px;font-weight:300;margin-bottom:3px;">'+w.where+'</div><div style="font-family:\'DM Mono\',monospace;font-size:8px;color:var(--t2);">~'+w.mins+' min · '+w.signal+' signal quality</div></div>';}).join('');
+}
+
+async function renderPortWx(ai){
+  if(!ai||!ai.port_etas||!ai.port_etas.length)return;
+  var el=document.getElementById('port-wx');
+  if(!el)return;
+  el.innerHTML='<div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--t2);padding:8px 0;">Loading port forecasts…</div>';
+  var html='';
+  for(var i=0;i<Math.min(3,ai.port_etas.length);i++){
+    var p=ai.port_etas[i];
+    var pp=PORTS.find(function(x){return x.n.toLowerCase().includes(p.port.toLowerCase().split(',')[0]);});
+    if(!pp)continue;
+    try{
+      var url='https://api.open-meteo.com/v1/forecast?latitude='+pp.lat+'&longitude='+pp.lon+'&daily=temperature_2m_max,wind_speed_10m_max,precipitation_sum&wind_speed_unit=kn&temperature_unit=fahrenheit&timezone=auto&forecast_days=3';
+      var r=await fetch(url,{signal:AbortSignal.timeout(8000)});
+      var j=await r.json();
+      if(j.daily){
+        html+='<div style="border:1px solid var(--bd);padding:12px;margin-bottom:10px;"><div style="font-size:16px;font-weight:300;margin-bottom:4px;">'+p.port+'</div><div style="font-family:\'DM Mono\',monospace;font-size:8px;color:var(--t2);letter-spacing:.15em;margin-bottom:8px;">ETA '+p.arrive+'</div>';
+        for(var d=0;d<Math.min(2,j.daily.time.length);d++){
+          var dt=new Date(j.daily.time[d]);
+          html+='<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--t3);"><div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--t2);">'+dt.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'})+'</div><div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--t1);">'+(j.daily.temperature_2m_max[d]||'—')+'°F · '+(j.daily.wind_speed_10m_max[d]||'—')+'kn wind</div></div>';
+        }
+        html+='</div>';
+      }
+    }catch(e){}
+  }
+  el.innerHTML=html||'<div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--t2);">Port forecast unavailable.</div>';
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MAP
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function initMap(){
+  if(S.map)return;
+  S.map=L.map('map',{center:[25,-78.5],zoom:6,zoomControl:false,attributionControl:false});
+  S.baseTile=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(S.map);
+  S.seaTile=L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png',{maxZoom:16,opacity:0}).addTo(S.map);
+  // Home port
+  L.circleMarker([HOME.lat,HOME.lon],{radius:6,color:'#C9A84C',fillColor:'#C9A84C',fillOpacity:.9,weight:1}).bindTooltip('Port Everglades · Home Port',{className:'ora-tip'}).addTo(S.map);
+  // Disney ports
+  PORTS.forEach(function(p){L.circleMarker([p.lat,p.lon],{radius:3,color:'#302c28',fillColor:'#5a534c',fillOpacity:.9,weight:1}).bindTooltip(p.n,{className:'ora-tip'}).addTo(S.map);});
+  // Zoom → resize silhouette
+  S.map.on('zoomend',function(){if(S.data)drawShip(S.data);});
+}
+
+function calcShipPx(lat,zoom){
+  var mpp=(156543.03392*Math.cos(lat*Math.PI/180))/Math.pow(2,zoom);
+  return {w:Math.max(50,SHIP.len/mpp),h:Math.max(9,SHIP.beam/mpp)};
+}
+
+function shipSVG(w,h,hdg){
+  var hw=w/2,hh=h/2;
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="'+(w+30)+'" height="'+(h+30)+'" viewBox="'+(-hw-15)+' '+(-hh-15)+' '+(w+30)+' '+(h+30)+'" overflow="visible"><g transform="rotate('+(hdg||0)+')">'+'<polygon points="'+hw+',0 '+(hw*.8)+','+-hh+' '+(-hw*.85)+','+-hh*.9+' '+(-hw*.85)+','+hh*.9+' '+(hw*.8)+','+hh+'" fill="#C9A84C" opacity=".92" stroke="#080808" stroke-width=".6"/>'+'<line x1="'+(-hw*.5)+'" y1="0" x2="'+(hw*.65)+'" y2="0" stroke="#080808" stroke-width=".7" opacity=".35"/>'+'<circle cx="0" cy="0" r="'+Math.min(2.5,hh*.25)+'" fill="#080808" opacity=".4"/>'+'</g></svg>';
+}
+
+function drawShip(d){
+  if(!S.map)return;
+  var sz=calcShipPx(d.lat,S.map.getZoom());
+  var icon=L.divIcon({html:shipSVG(sz.w,sz.h,d.heading),className:'',iconSize:[sz.w+30,sz.h+30],iconAnchor:[(sz.w+30)/2,(sz.h+30)/2]});
+  if(S.shipMark){S.shipMark.setLatLng([d.lat,d.lon]);S.shipMark.setIcon(icon);}
+  else{S.shipMark=L.marker([d.lat,d.lon],{icon:icon,zIndexOffset:1000}).addTo(S.map);}
+}
+
+function drawWake(){
+  if(S.wakeLine){S.map.removeLayer(S.wakeLine);S.wakeLine=null;}
+  if(!S.map||S.history.length<2)return;
+  var pts=S.history.map(function(p){return [p.lat,p.lon];});
+  S.wakeLine=L.polyline(pts,{color:'#C9A84C',weight:2,opacity:.3,dashArray:'4,7'}).addTo(S.map);
+}
+
+function updateFleetMarker(mmsi,lat,lon,name){
+  if(!S.map||!S.fleetOn)return;
+  if(S.fleetMarks[mmsi])S.map.removeLayer(S.fleetMarks[mmsi]);
+  var icon=L.divIcon({html:'<div style="width:9px;height:9px;border-radius:50%;background:#302c28;border:1px solid #C9A84C40;"></div>',className:'',iconSize:[9,9],iconAnchor:[4.5,4.5]});
+  S.fleetMarks[mmsi]=L.marker([lat,lon],{icon:icon}).bindTooltip(name,{className:'ora-tip'}).addTo(S.map);
+}
+
+function updateMap(d){
+  if(!S.map)return;
+  drawShip(d);
+  drawWake();
+  if(!S.map.getBounds().contains([d.lat,d.lon]))S.map.panTo([d.lat,d.lon],{animate:true,duration:2});
+  var nearDist=Math.min.apply(null,PORTS.map(function(p){return hav(d.lat,d.lon,p.lat,p.lon);}));
+  if(nearDist<20&&S.map.getZoom()<9)S.map.flyTo([d.lat,d.lon],9,{duration:2.5});
+}
+
+function toggleChart(){
+  S.chartMode=!S.chartMode;
+  S.seaTile.setOpacity(S.chartMode?.8:0);
+  var b=document.getElementById('ct-chart');
+  if(b)b.className='mctrl'+(S.chartMode?' on':'');
+}
+
+function toggleFleet(){
+  S.fleetOn=!S.fleetOn;
+  var b=document.getElementById('ct-fleet');
+  if(b)b.className='mctrl'+(S.fleetOn?' on':'');
+  if(S.fleetOn)fetchFleet();
+  else{Object.keys(S.fleetMarks).forEach(function(k){if(S.map)S.map.removeLayer(S.fleetMarks[k]);});S.fleetMarks={};}
+}
+
+function resetView(){if(S.data&&S.map)S.map.flyTo([S.data.lat,S.data.lon],7,{duration:1.5});}
+
+var replayTimer=null;
+function startReplay(){
+  if(S.history.length<3){alert('Not enough history yet. Let the tracker run for a while first.');return;}
+  if(replayTimer){clearInterval(replayTimer);replayTimer=null;document.getElementById('ct-replay').className='mctrl';return;}
+  var idx=0;
+  document.getElementById('ct-replay').className='mctrl on';
+  replayTimer=setInterval(function(){
+    if(idx>=S.history.length){clearInterval(replayTimer);replayTimer=null;document.getElementById('ct-replay').className='mctrl';return;}
+    var p=S.history[idx];
+    if(S.map)S.map.panTo([p.lat,p.lon],{animate:true,duration:.45});
+    idx++;
+  },550);
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SHARE CARD
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function makeShareCard(){
+  var cv=document.getElementById('share-cv');
+  var ctx=cv.getContext('2d');
+  var W=800,H=420;
+  ctx.fillStyle='#080808';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#C9A84C';ctx.fillRect(0,0,W,2);ctx.fillRect(0,H-2,W,2);
+  ctx.strokeStyle='#1a1a1a';ctx.lineWidth=1;ctx.strokeRect(1,1,W-2,H-2);
+  ctx.font='300 42px Georgia';ctx.fillStyle='#e8e0d0';ctx.fillText('Disney Destiny',38,62);
+  ctx.font='300 11px monospace';ctx.fillStyle='#524c46';ctx.fillText('DISNEY CRUISE LINE  ·  LIVE TRACKER  ·  '+new Date().toUTCString().toUpperCase(),38,82);
+  ctx.fillStyle='#1a1a1a';ctx.fillRect(38,98,W-76,1);
+  if(S.data){
+    ctx.font='300 20px monospace';ctx.fillStyle='#C9A84C';
+    ctx.fillText(S.data.lat.toFixed(4)+'° N   '+Math.abs(S.data.lon).toFixed(4)+'° W',38,140);
+    ctx.font='300 13px monospace';ctx.fillStyle='#524c46';
+    ctx.fillText('SPEED: '+(S.data.speed||0).toFixed(1)+' KN',38,175);
+    ctx.fillText('HEADING: '+(S.data.heading||0)+'°  '+cmp(S.data.heading),38,195);
+    ctx.fillText('STATUS: '+nst(S.data.status).toUpperCase(),38,215);
+    var dcMi=nm2mi(coastDist(S.data.lat,S.data.lon));
+    ctx.fillStyle=dcMi<=3.5?'#22c55e':'#ef4444';
+    ctx.fillText('MINT SIGNAL: '+(dcMi<=3.5?'LIKELY ·'+dcMi.toFixed(1)+' MI FROM LAND':'NO SERVICE · '+dcMi.toFixed(1)+' MI OFFSHORE'),38,245);
+  }
+  if(S.ai){
+    ctx.fillStyle='#1a1a1a';ctx.fillRect(38,268,W-76,1);
+    ctx.font='300 13px monospace';ctx.fillStyle='#524c46';
+    ctx.fillText('CRUISE: '+(S.ai.itinerary||'—')+'  ·  '+(S.ai.phase||''),38,298);
+    ctx.fillText('RETURN TO PORT EVERGLADES: '+(S.ai.home_arrive||'—'),38,318);
+  }
+  ctx.font='300 9px monospace';ctx.fillStyle='#1c1a18';
+  ctx.fillText('GENERATED '+new Date().toLocaleString()+'  ·  DISNEY DESTINY TRACKER',38,H-18);
+  var img=document.getElementById('share-img');
+  img.src=cv.toDataURL();img.style.display='block';
+  var dl=document.getElementById('share-dl');
+  dl.href=cv.toDataURL();dl.download='destiny-'+Date.now()+'.png';dl.style.display='block';
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// NOTIFICATIONS + LOG
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function addLog(icon,msg){
+  S.log.unshift({icon:icon,msg:msg,ts:new Date().toISOString()});
+  if(S.log.length>60)S.log.pop();
+  localStorage.setItem('nlog',JSON.stringify(S.log));
+  renderLog();
+}
+function renderLog(){
+  var el=document.getElementById('notif-log');
+  if(!el)return;
+  if(!S.log.length){el.innerHTML='<div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--t2);padding:10px 0;">No notifications yet.</div>';return;}
+  el.innerHTML=S.log.slice(0,25).map(function(n){return '<div class="notif-item"><div style="font-size:14px;flex-shrink:0;margin-top:2px;">'+n.icon+'</div><div><div class="notif-body">'+n.msg+'</div><div class="notif-ts">'+new Date(n.ts).toLocaleString()+'</div></div></div>';}).join('');
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SCRIPTABLE WIDGET
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function copyWidget(){
+  var code='// Disney Destiny Tracker Widget\n// Paste into Scriptable app\n\nconst MMSI = \'311001540\';\nconst PREV = Keychain.contains(\'dspd\') ? parseFloat(Keychain.get(\'dspd\')) : null;\n\nasync function ais() {\n  const url = \'https://api.allorigins.win/get?url=\' + encodeURIComponent(\'https://www.marinetraffic.com/en/ais/details/ships/mmsi:\' + MMSI);\n  const r = await new Request(url).loadJSON();\n  const h = r.contents || \'\';\n  function gn(k) { const m = h.match(new RegExp(\'"\'+ k +\'"\\\\s*:\\\\s*"?(-?[\\\\d.]+)"?\')); return m ? parseFloat(m[1]) : null; }\n  const lat = gn(\'LATITUDE\'), lon = gn(\'LONGITUDE\');\n  if (!lat || !lon) return null;\n  let spd = gn(\'SPEED\'); if (spd > 35) spd /= 10;\n  const COASTS = [{lat:26.08,lon:-80.11},{lat:25.05,lon:-77.36},{lat:26.01,lon:-77.52},{lat:20.51,lon:-86.95},{lat:18.47,lon:-66.11}];\n  function hav(a,b,c,d){const R=3440.1,r=Math.PI/180,x=Math.pow(Math.sin((c-a)*r/2),2)+Math.cos(a*r)*Math.cos(c*r)*Math.pow(Math.sin((d-b)*r/2),2);return R*2*Math.asin(Math.sqrt(x));}\n  const dcNm = Math.min(...COASTS.map(p => hav(lat,lon,p.lat,p.lon)));\n  const dcMi = dcNm * 1.15078;\n  const distHome = hav(lat,lon,26.081,-80.114);\n  if (PREV !== null && PREV > 8 && spd < PREV - 6) {\n    const n = new Notification(); n.title = \'⚡ Speed Anomaly\'; n.body = \'Ship slowed to \' + spd.toFixed(1) + \'kn\'; n.schedule();\n  }\n  if (dcMi <= 3.5) {\n    const n = new Notification(); n.title = \'📶 Signal!\'; n.body = \'Mint signal likely · \' + dcMi.toFixed(1) + \' mi from land\'; n.schedule();\n  }\n  Keychain.set(\'dspd\', spd.toString());\n  return { lat, lon, spd, hdg: gn(\'HEADING\'), dcMi, distHome };\n}\n\nconst DIRS=[\'N\',\'NNE\',\'NE\',\'ENE\',\'E\',\'ESE\',\'SE\',\'SSE\',\'S\',\'SSW\',\'SW\',\'WSW\',\'W\',\'WNW\',\'NW\',\'NNW\'];\nconst cmp = h => h==null?\'—\':DIRS[Math.round(h/22.5)%16];\n\nconst d = await ais();\nconst w = new ListWidget();\nw.backgroundColor = new Color(\'#080808\');\nw.setPadding(14,16,14,16);\n\nif (d) {\n  const t = w.addText(\'DISNEY DESTINY\');\n  t.textColor = new Color(\'#C9A84C\'); t.font = Font.regularSystemFont(8);\n  w.addSpacer(8);\n  const sv = w.addText(d.spd != null ? d.spd.toFixed(1) + \' kn\' : \'— kn\');\n  sv.textColor = new Color(d.spd > 1 ? \'#C9A84C\' : \'#524c46\');\n  sv.font = Font.lightSystemFont(30);\n  w.addSpacer(5);\n  const hv = w.addText((d.hdg || 0) + \'° \' + cmp(d.hdg));\n  hv.textColor = new Color(\'#524c46\'); hv.font = Font.regularSystemFont(10);\n  w.addSpacer(3);\n  const dv = w.addText(d.distHome.toFixed(0) + \' nm to home\');\n  dv.textColor = new Color(\'#524c46\'); dv.font = Font.regularSystemFont(10);\n  w.addSpacer(3);\n  const sg = w.addText(d.dcMi <= 3.5 ? \'📶 SIGNAL\' : \'🔇 NO SERVICE\');\n  sg.textColor = new Color(d.dcMi <= 3.5 ? \'#22c55e\' : \'#ef4444\');\n  sg.font = Font.regularSystemFont(10);\n  w.addSpacer(5);\n  const up = w.addText(\'UPD \' + new Date().toLocaleTimeString([],{hour:\'2-digit\',minute:\'2-digit\'}));\n  up.textColor = new Color(\'#2a2826\'); up.font = Font.regularSystemFont(8);\n} else {\n  const e = w.addText(\'AIS UNAVAILABLE\');\n  e.textColor = new Color(\'#ef4444\'); e.font = Font.regularSystemFont(11);\n}\n\nScript.setWidget(w);\nScript.complete();\n';
+  if(navigator.clipboard){navigator.clipboard.writeText(code).then(function(){alert('Widget code copied!\n\nPaste into Scriptable app.');});}
+  else{var ta=document.createElement('textarea');ta.value=code;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert('Widget code copied! Paste into Scriptable app.');}
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SETUP
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function openSetup(){
+  var el=document.getElementById('setup');
+  el.style.display='flex';
+  document.getElementById('g-key').value=S.groqKey;
+}
+function clearData(){if(confirm('Clear all saved data?')){localStorage.clear();location.reload();}}
+
+document.getElementById('setup-go').addEventListener('click',function(){
+  var k=document.getElementById('g-key').value.trim();
+  if(!k||!k.startsWith('gsk_')){alert('Please enter a valid Groq key starting with gsk_');return;}
+  S.groqKey=k;localStorage.setItem('groqKey',k);
+  document.getElementById('setup').style.display='none';
+  boot();
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TABS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function goTab(name){
+  S.tab=name;
+  var tabs=['map','live','wx','ai','more'];
+  tabs.forEach(function(t){
+    var pane=document.getElementById('pane-'+t);
+    if(!pane)return;
+    var on=t===name;
+    if(t==='map'){pane.className=on?'on':'';}
+    else{pane.className='pane'+(on?' on':'');}
+  });
+  document.querySelectorAll('.tb').forEach(function(btn,i){btn.className='tb'+(tabs[i]===name?' on':'');});
+  var content=document.getElementById('content');
+  if(content)content.style.overflow=name==='map'?'hidden':'auto';
+  if(name==='map')setTimeout(function(){S.map&&S.map.invalidateSize();},80);
+  if(name==='more'){renderLog();}
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// REFRESH LOOP
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function startLoop(){
+  loadAll();
+  runAI();
+  fetchFleet();
+  S.tick=60;
+  if(S.tickTimer)clearInterval(S.tickTimer);
+  S.tickTimer=setInterval(function(){
+    S.tick--;
+    var rl=document.getElementById('refresh-lbl');
+    if(rl&&S.data)rl.textContent='REFRESH IN '+S.tick+'s';
+    if(S.tick<=0){
+      S.tick=60;
+      loadAll().then(function(){if(S.data)runAI();});
+      if(Math.random()<.3)fetchFleet();
+    }
+  },1000);
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// BOOT
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function boot(){
+  initMap();
+  goTab('map');
+  startLoop();
+}
+
+(function(){
+  if(!S.groqKey){openSetup();}
+  else{boot();}
+})();
+</script>
+</body>
+</html>
