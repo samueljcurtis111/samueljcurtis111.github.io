@@ -408,18 +408,24 @@ function confCol(c){return c==='High'?'var(--grn)':c==='Medium'?'var(--amb)':'va
 function fetchMMSI(mmsi, quiet){
   return new Promise(function(resolve){
     if(!quiet) setStatus('load','CONNECTING · AISSTREAM');
-    var ws;
-    var timeout;
+    var ws, timeout, resolved=false;
+    function done(val){
+      if(resolved)return; resolved=true;
+      clearTimeout(timeout);
+      try{ws&&ws.readyState<2&&ws.close();}catch(e){}
+      resolve(val);
+    }
     try{
       ws = new WebSocket('wss://stream.aisstream.io/v0/stream');
-    }catch(e){ resolve(null); return; }
+    }catch(e){ console.error('WS create failed',e); resolve(null); return; }
 
     timeout = setTimeout(function(){
-      try{ ws.close(); }catch(e){}
-      resolve(null);
-    }, 15000);
+      if(!quiet)console.warn('AISStream timeout for MMSI',mmsi);
+      done(null);
+    }, 20000);
 
     ws.onopen = function(){
+      if(!quiet)console.log('AISStream connected, subscribing to',mmsi);
       ws.send(JSON.stringify({
         APIKey: S.aissKey,
         BoundingBoxes: [[ [-90,-180],[90,180] ]],
@@ -431,39 +437,35 @@ function fetchMMSI(mmsi, quiet){
     ws.onmessage = function(evt){
       try{
         var msg = JSON.parse(evt.data);
+        // AISStream sends an error object if key is bad
+        if(msg.error||msg.Error){
+          console.error('AISStream error:',msg.error||msg.Error);
+          done(null); return;
+        }
         var pr = msg.Message && msg.Message.PositionReport;
         var sd = msg.Message && msg.Message.ShipStaticData;
-        var meta = msg.MetaData || {};
         if(pr){
-          var lat = pr.Latitude, lon = pr.Longitude;
-          if(!lat||!lon||Math.abs(lat)>90||Math.abs(lon)>180){ return; }
-          var spd = pr.Sog != null ? pr.Sog : null;
-          var hdg = pr.TrueHeading != null && pr.TrueHeading < 360 ? pr.TrueHeading : null;
-          var crs = pr.Cog != null ? pr.Cog : null;
-          clearTimeout(timeout);
-          try{ ws.close(); }catch(e){}
-          resolve({
-            lat: lat, lon: lon,
-            speed: spd, heading: hdg, course: crs,
-            status: pr.NavigationalStatus,
-            destination: S._staticDest || null,
-            draught: S._staticDraught || null,
-            callsign: S._staticCallsign || null,
-            eta: S._staticEta || null,
-            source: 'AISStream'
-          });
+          var lat=pr.Latitude, lon=pr.Longitude;
+          if(!lat||!lon||Math.abs(lat)>90||Math.abs(lon)>180)return;
+          var spd=pr.Sog!=null?pr.Sog:null;
+          var hdg=pr.TrueHeading!=null&&pr.TrueHeading<360?pr.TrueHeading:null;
+          if(!quiet)console.log('Got position:',lat,lon,'speed:',spd);
+          done({lat,lon,speed:spd,heading:hdg,course:pr.Cog,
+            status:pr.NavigationalStatus,
+            destination:S._staticDest||null,draught:S._staticDraught||null,
+            callsign:S._staticCallsign||null,eta:S._staticEta||null,
+            source:'AISStream'});
         } else if(sd){
-          // Cache static data for next position report
-          S._staticDest = sd.Destination || null;
-          S._staticDraught = sd.MaximumStaticDraught || null;
-          S._staticCallsign = sd.CallSign || null;
-          if(sd.Eta) S._staticEta = sd.Eta.Month+'/'+sd.Eta.Day+' '+sd.Eta.Hour+':'+String(sd.Eta.Minute).padStart(2,'0');
+          S._staticDest=sd.Destination||null;
+          S._staticDraught=sd.MaximumStaticDraught||null;
+          S._staticCallsign=sd.CallSign||null;
+          if(sd.Eta)S._staticEta=sd.Eta.Month+'/'+sd.Eta.Day+' '+sd.Eta.Hour+':'+String(sd.Eta.Minute).padStart(2,'0');
         }
-      }catch(e){}
+      }catch(e){console.error('WS message parse error',e);}
     };
 
-    ws.onerror = function(){ clearTimeout(timeout); resolve(null); };
-    ws.onclose = function(){ clearTimeout(timeout); };
+    ws.onerror=function(e){console.error('AISStream WS error',e);done(null);};
+    ws.onclose=function(e){if(!quiet)console.log('WS closed code:',e.code,'reason:',e.reason);clearTimeout(timeout);};
   });
 }
 
@@ -584,7 +586,7 @@ async function runAI(){
     '{"itinerary":"4-Night Bahamas","nights":4,"phase":"Day 2 — En route Lookout Cay","confidence":"High","summary":"Expert 2-sentence narrative of current situation and where ship is headed","port_etas":[{"port":"Lookout Cay","arrive":"Mon Mar 23, 8:00 AM EST","depart":"Mon Mar 23, 5:00 PM EST","nm":45,"type":"Private Island"}],"home_arrive":"Thu Mar 26, 7:30 AM EST","home_hrs":67,"home_conf":"High","home_note":"Brief reasoning","cell":[{"time":"Mon Mar 23, 7:30–10:00 AM EST","where":"Approaching Lookout Cay","signal":"Good","mins":150}],"day":2,"total_days":4}';
 
   try{
-    var r=await fetch('https://corsproxy.org/?' + encodeURIComponent('https://api.groq.com/openai/v1/chat/completions'),{
+    var r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+S.groqKey},
       body:JSON.stringify({model:'llama-3.1-8b-instant',max_tokens:1000,temperature:.3,messages:[{role:'user',content:prompt}]})
@@ -942,7 +944,7 @@ function goTab(name){
 function startLoop(){
   loadAll();
   runAI();
-  fetchFleet();
+  setTimeout(fetchFleet, 8000); // delay fleet so main ship connects first
   S.tick=60;
   if(S.tickTimer)clearInterval(S.tickTimer);
   S.tickTimer=setInterval(function(){
