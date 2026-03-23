@@ -114,19 +114,10 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 
       <div class="setup-lbl">GROQ API KEY (FREE · AI PREDICTIONS)</div>
       <input class="setup-input" id="g-key" type="password" placeholder="gsk_xxxxxxxxxxxx" autocomplete="off">
-
-      <div class="setup-lbl" style="margin-top:20px;">AISSTREAM API KEY (FREE · AISSTREAM.IO)</div>
-      <input class="setup-input" id="a-key" type="password" placeholder="your aisstream key" autocomplete="off">
       <div class="setup-hint">
         GET FREE KEY AT CONSOLE.GROQ.COM<br>
         CLICK API KEYS → CREATE API KEY<br>
         KEY STARTS WITH gsk_
-      </div>
-
-      <div class="setup-hint">
-        NOTIFICATIONS VIA SCRIPTABLE WIDGET<br>
-        COPY WIDGET CODE FROM THE MORE TAB<br>
-        PASTE INTO SCRIPTABLE · ADD TO HOME SCREEN
       </div>
 
       <button class="btn btn-g" id="setup-go">LAUNCH TRACKER ↗</button>
@@ -385,7 +376,6 @@ var S = {
   history: [],
   fleetData: {},
   groqKey: localStorage.getItem('groqKey') || '',
-  aissKey: localStorage.getItem('aissKey') || 'YOUR_AISSTREAM_KEY_HERE',
   aissKey: localStorage.getItem('aissKey') || 'YOUR_AISSTREAM_KEY_HERE',
   log: JSON.parse(localStorage.getItem('nlog') || '[]'),
   tab: 'map',
