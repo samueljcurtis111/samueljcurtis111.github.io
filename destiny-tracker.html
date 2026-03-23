@@ -431,9 +431,9 @@ function fetchMMSI(mmsi, quiet){
 
     ws.onopen = function(){
       ws.send(JSON.stringify({
-        Apikey: S.aissKey,
+        APIKey: S.aissKey,
         BoundingBoxes: [[ [-90,-180],[90,180] ]],
-        FiltersShipMMSI: [mmsi],
+        FiltersShipMMSI: [String(mmsi)],
         FilterMessageTypes: ['PositionReport','ShipStaticData']
       }));
     };
