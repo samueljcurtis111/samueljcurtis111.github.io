@@ -104,8 +104,19 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
       <div class="setup-title">Destiny</div>
       <div class="setup-sub">DISNEY DESTINY · LIVE NAVIGATION SYSTEM</div>
 
-      <div class="setup-lbl">GROQ API KEY (FREE)</div>
+      <div class="setup-lbl">AISSTREAM API KEY (FREE)</div>
+      <input class="setup-input" id="a-key" type="password" placeholder="aisstream key from aisstream.io" autocomplete="off">
+      <div class="setup-hint">
+        GET FREE KEY AT AISSTREAM.IO<br>
+        SIGN IN WITH GITHUB → API KEYS → CREATE KEY<br>
+        REAL-TIME WEBSOCKET AIS DATA
+      </div>
+
+      <div class="setup-lbl">GROQ API KEY (FREE · AI PREDICTIONS)</div>
       <input class="setup-input" id="g-key" type="password" placeholder="gsk_xxxxxxxxxxxx" autocomplete="off">
+
+      <div class="setup-lbl" style="margin-top:20px;">AISSTREAM API KEY (FREE · AISSTREAM.IO)</div>
+      <input class="setup-input" id="a-key" type="password" placeholder="your aisstream key" autocomplete="off">
       <div class="setup-hint">
         GET FREE KEY AT CONSOLE.GROQ.COM<br>
         CLICK API KEYS → CREATE API KEY<br>
@@ -374,6 +385,8 @@ var S = {
   history: [],
   fleetData: {},
   groqKey: localStorage.getItem('groqKey') || '',
+  aissKey: localStorage.getItem('aissKey') || 'YOUR_AISSTREAM_KEY_HERE',
+  aissKey: localStorage.getItem('aissKey') || 'YOUR_AISSTREAM_KEY_HERE',
   log: JSON.parse(localStorage.getItem('nlog') || '[]'),
   tab: 'map',
   map: null, shipMark: null, wakeLine: null,
@@ -400,36 +413,68 @@ function set$(id,val,col){var el=document.getElementById(id);if(!el)return;el.te
 function confCol(c){return c==='High'?'var(--grn)':c==='Medium'?'var(--amb)':'var(--red)';}
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// AIS FETCH — MULTI SOURCE
+// AIS FETCH — AISSTREAM.IO WEBSOCKET
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function parseHTML(h){
-  function gn(k){var m=h.match(new RegExp('"'+k+'"\\s*:\\s*"?(-?[\\d.]+)"?'));return m?parseFloat(m[1]):null;}
-  function gs(k){var m=h.match(new RegExp('"'+k+'"\\s*:\\s*"([^"]+)"'));return m?m[1]:null;}
-  var lat=gn('LATITUDE'),lon=gn('LONGITUDE');
-  if(!lat||!lon||Math.abs(lat)>90||Math.abs(lon)>180)return null;
-  var spd=gn('SPEED');if(spd!=null&&spd>35)spd/=10;
-  var crs=gn('COURSE');if(crs!=null&&crs>360)crs/=10;
-  var hdg=gn('HEADING');if(hdg!=null&&hdg>360)hdg=null;
-  var dft=gn('DRAUGHT');if(dft!=null&&dft>25)dft/=10;
-  return {lat:lat,lon:lon,speed:spd,heading:hdg,course:crs,status:gn('STATUS'),destination:gs('DESTINATION'),eta:gs('ETA'),draught:dft,callsign:gs('CALLSIGN'),ts:gs('TIMESTAMP')};
-}
-async function fetchMMSI(mmsi,quiet){
-  var sources=[
-    {name:'MarineTraffic',url:'https://www.marinetraffic.com/en/ais/details/ships/mmsi:'+mmsi},
-    {name:'VesselFinder', url:'https://www.vesselfinder.com/vessels/details/'+mmsi},
-    {name:'MyShipTracking',url:'https://www.myshiptracking.com/?mmsi='+mmsi},
-  ];
-  for(var i=0;i<sources.length;i++){
-    var src=sources[i];
+function fetchMMSI(mmsi, quiet){
+  return new Promise(function(resolve){
+    if(!quiet) setStatus('load','CONNECTING · AISSTREAM');
+    var ws;
+    var timeout;
     try{
-      if(!quiet)setStatus('load','FETCHING · '+src.name.toUpperCase());
-      var r=await fetch('https://api.allorigins.win/get?url='+encodeURIComponent(src.url),{signal:AbortSignal.timeout(13000)});
-      var j=await r.json();
-      var d=parseHTML(j.contents||'');
-      if(d){d.source=src.name;return d;}
-    }catch(e){}
-  }
-  return null;
+      ws = new WebSocket('wss://stream.aisstream.io/v0/stream');
+    }catch(e){ resolve(null); return; }
+
+    timeout = setTimeout(function(){
+      try{ ws.close(); }catch(e){}
+      resolve(null);
+    }, 15000);
+
+    ws.onopen = function(){
+      ws.send(JSON.stringify({
+        Apikey: S.aissKey,
+        BoundingBoxes: [[ [-90,-180],[90,180] ]],
+        FiltersShipMMSI: [mmsi],
+        FilterMessageTypes: ['PositionReport','ShipStaticData']
+      }));
+    };
+
+    ws.onmessage = function(evt){
+      try{
+        var msg = JSON.parse(evt.data);
+        var pr = msg.Message && msg.Message.PositionReport;
+        var sd = msg.Message && msg.Message.ShipStaticData;
+        var meta = msg.MetaData || {};
+        if(pr){
+          var lat = pr.Latitude, lon = pr.Longitude;
+          if(!lat||!lon||Math.abs(lat)>90||Math.abs(lon)>180){ return; }
+          var spd = pr.Sog != null ? pr.Sog : null;
+          var hdg = pr.TrueHeading != null && pr.TrueHeading < 360 ? pr.TrueHeading : null;
+          var crs = pr.Cog != null ? pr.Cog : null;
+          clearTimeout(timeout);
+          try{ ws.close(); }catch(e){}
+          resolve({
+            lat: lat, lon: lon,
+            speed: spd, heading: hdg, course: crs,
+            status: pr.NavigationalStatus,
+            destination: S._staticDest || null,
+            draught: S._staticDraught || null,
+            callsign: S._staticCallsign || null,
+            eta: S._staticEta || null,
+            source: 'AISStream'
+          });
+        } else if(sd){
+          // Cache static data for next position report
+          S._staticDest = sd.Destination || null;
+          S._staticDraught = sd.MaximumStaticDraught || null;
+          S._staticCallsign = sd.CallSign || null;
+          if(sd.Eta) S._staticEta = sd.Eta.Month+'/'+sd.Eta.Day+' '+sd.Eta.Hour+':'+String(sd.Eta.Minute).padStart(2,'0');
+        }
+      }catch(e){}
+    };
+
+    ws.onerror = function(){ clearTimeout(timeout); resolve(null); };
+    ws.onclose = function(){ clearTimeout(timeout); };
+  });
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -866,13 +911,17 @@ function openSetup(){
   var el=document.getElementById('setup');
   el.style.display='flex';
   document.getElementById('g-key').value=S.groqKey;
+  document.getElementById('a-key').value=S.aissKey==='YOUR_AISSTREAM_KEY_HERE'?'':S.aissKey;
 }
 function clearData(){if(confirm('Clear all saved data?')){localStorage.clear();location.reload();}}
 
 document.getElementById('setup-go').addEventListener('click',function(){
   var k=document.getElementById('g-key').value.trim();
+  var ak=document.getElementById('a-key').value.trim();
   if(!k||!k.startsWith('gsk_')){alert('Please enter a valid Groq key starting with gsk_');return;}
+  if(!ak){alert('Please enter your AISStream key');return;}
   S.groqKey=k;localStorage.setItem('groqKey',k);
+  S.aissKey=ak;localStorage.setItem('aissKey',ak);
   document.getElementById('setup').style.display='none';
   boot();
 });
@@ -928,7 +977,7 @@ function boot(){
 }
 
 (function(){
-  if(!S.groqKey){openSetup();}
+  if(!S.groqKey||!S.aissKey||S.aissKey==='YOUR_AISSTREAM_KEY_HERE'){openSetup();}
   else{boot();}
 })();
 </script>
